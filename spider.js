@@ -1,50 +1,3 @@
-var $_GET = (function(){
-    var url = window.document.location.href.toString();
-    var u = url.split("?");
-    if(typeof(u[1]) == "string"){
-        u = u[1].split("&");
-        var get = {};
-        for(var i in u){
-            if(typeof(u[i])=="function")continue;
-            var j = u[i].split("=");
-            get[j[0]] = j[1];
-        }
-        return get;
-    } else {
-        return {};
-    }
-})();
-
-// https://stackoverflow.com/questions/3442394
-$.fn.pureText = function() {
-    var text =
-        this.clone()    //clone the element
-            .children() //select all the children
-            .remove()   //remove all the children
-            .end()  //again go back to selected element
-            .text();
-    return text;
-}
-
-$.endInt = function(str) {
-    return parseInt(str.match(/\d+$/)[0]);
-}
-
-var StorageHelper = (function(){
-    var getKey = (type, id) => type + '-' + id;
-    return {
-        save(type, id, data) {
-            console.log("StorageSave", type, id);
-            id = id | 0;
-            localStorage[getKey(type, id)] = JSON.stringify(data);
-        },
-        get(type, id) {
-            id = id | 0;
-            return JSON.parse(localStorage[getKey(type, id)]);
-        }
-    }
-})();
-
 var Spider = (function(){
 
     var WaitList = (function(){
@@ -157,12 +110,18 @@ function atCourseRootPage() {
     $root.find('.activity').each((idx, item) => {
         var $item = $(item);
         var id = $.endInt($item.attr('id'));
+        var type = $item[0].className
+            .split(/\s+/)
+            .filter(cls => cls != 'activity' && !cls.startsWith('modtype'))[0];
+
         if($item.hasClass('folder')) {
             Spider.autoEnqueueArr(['/mod/folder/view.php?id=' + id]);
         }
+        
         dataArr.push({
             id: id,
             name: $item.find(".instancename").pureText(),
+            type: type,
         })
     });
 

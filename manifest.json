@@ -6,7 +6,7 @@
 		{
 			"matches": ["https://elearning.cuhk.edu.cn/*"],
 			"css": ["style.css"],
-			"js": ["jquery.min.js", "style.js"],
+			"js": ["jquery.min.js", "helper.js", "spider.js", "displayer.js"],
 			"all_frames": true
 		}
 	],
