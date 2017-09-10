@@ -34,7 +34,7 @@ var StorageHelper = (function(){
     var getKey = (type, id) => type + '-' + id;
     return {
         save(type, id, data) {
-            console.log("StorageSave", type, id, data);
+            console.log("StorageSave", type, id);
             id = id | 0;
             localStorage[getKey(type, id)] = JSON.stringify(data);
         },
@@ -68,6 +68,12 @@ var Spider = (function(){
                 var result = data.shift();
                 set(data);
                 return result;
+            },
+            all() {
+                return get();
+            },
+            clear() {
+                set([]);
             }
         }
     })();
@@ -77,20 +83,41 @@ var Spider = (function(){
         return localStorage[IS_RUNNING_KEY] === 'true';
     };
 
+    const IFRAME_CNT = 3;
+
+    var stopSpider = function () {
+        localStorage[IS_RUNNING_KEY] = 'false';
+    }
+
     return {
-        start() {
+        start(initialEnqueueArr) {
+            // set flag
             localStorage[IS_RUNNING_KEY] = 'true';
+
+            // add data
+            WaitList.clear();
+            WaitList.enqueueArr(initialEnqueueArr);
+
+            // add iframes
+            $("<div>", {id: "mh-iframe-wrapper"}).appendTo("body");
+            for(var i = 0;i < IFRAME_CNT; ++i) {
+                $('<iframe>', {
+                    id:  'mh-iframe-' + i,
+                    src: WaitList.dequeue(), // initial src
+                }).appendTo('#mh-iframe-wrapper');
+            }
         },
+        stop: stopSpider,
         autoNext() {
             if(!isRunning()) return;
             var url = WaitList.dequeue();
-            console.log("AutoNext", url);
+            console.log("AutoNext", url, 'CurrentList', WaitList.all(), WaitList.all().length);
             if(url) {
                 setTimeout(() => {
                     location.href = url;
-                }, Math.random() * 3000 + 300 );
+                }, Math.random() * 2000 + 300 );
             } else {
-                localStorage[IS_RUNNING_KEY] = 'false';
+                stopSpider();
             }
         },
         autoEnqueueArr(arr) {
@@ -113,12 +140,14 @@ function atRootPage() {
 }
 
 function startSpider() {
-    Spider.start();
     var courseArr = StorageHelper.get('root', undefined);
-    Spider.autoEnqueueArr(courseArr.map(
+    Spider.start(courseArr.map(
         item => '/course/view.php?id=' + item.id
     ));
-    Spider.autoNext();
+}
+
+function stopSpider() {
+    Spider.stop();
 }
 
 function atCourseRootPage() {
@@ -158,18 +187,25 @@ function atOtherPage() {
     //
 }
 
+function isAtRootPage() {
+    var path = location.pathname;
+    return path == '' || path == '/' || path.startsWith('/index.php');
+}
+
 function boot() {
     var path = location.pathname;
-    if(path == '' || path == '/' || path.startsWith('/index.php')) {
+    if(isAtRootPage()) {
         atRootPage();
-    } else if(path.startsWith('/course/view.php')) {
-        atCourseRootPage();
-    } else if(path.startsWith('/mod/folder/view.php')) {
-        atFolderPage();
     } else {
-        atOtherPage();
+        if(path.startsWith('/course/view.php')) {
+            atCourseRootPage();
+        } else if(path.startsWith('/mod/folder/view.php')) {
+            atFolderPage();
+        } else {
+            atOtherPage();
+        } 
+        Spider.autoNext();
     }
-    Spider.autoNext();
 }
 
 boot();
