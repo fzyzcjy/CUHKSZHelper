@@ -37,7 +37,66 @@ var StorageHelper = (function(){
             console.log("StorageSave", type, id, data);
             id = id | 0;
             localStorage[getKey(type, id)] = JSON.stringify(data);
+        },
+        get(type, id) {
+            id = id | 0;
+            return JSON.parse(localStorage[getKey(type, id)]);
         }
+    }
+})();
+
+var Spider = (function(){
+
+    var WaitList = (function(){
+        const KEY = 'waitList';
+        var get = function() {
+            try {
+                return JSON.parse(localStorage[KEY]);
+            } catch(e) {
+                return [];
+            }
+        }
+        var set = function(data) {
+            localStorage[KEY] = JSON.stringify(data);
+        }
+        return {
+            enqueueArr(arr) {
+                set(get().concat(arr));
+            },
+            dequeue() {
+                var data = get();
+                var result = data.shift();
+                set(data);
+                return result;
+            }
+        }
+    })();
+
+    const IS_RUNNING_KEY = 'isSpiderRunning';
+    var isRunning = function() {
+        return localStorage[IS_RUNNING_KEY] === 'true';
+    };
+
+    return {
+        start() {
+            localStorage[IS_RUNNING_KEY] = 'true';
+        },
+        autoNext() {
+            if(!isRunning()) return;
+            var url = WaitList.dequeue();
+            console.log("AutoNext", url);
+            if(url) {
+                setTimeout(() => {
+                    location.href = url;
+                }, Math.random() * 3000 + 300 );
+            } else {
+                localStorage[IS_RUNNING_KEY] = 'false';
+            }
+        },
+        autoEnqueueArr(arr) {
+            if(!isRunning()) return;
+            WaitList.enqueueArr(arr);
+        },
     }
 })();
 
@@ -53,27 +112,27 @@ function atRootPage() {
     StorageHelper.save('root', undefined, courseArr);
 }
 
-function atCourseRootPage() {
-    var actionArr = {
-        folder($item) {
-            console.log('folder', $item.attr('id'));
-        },
-    };
+function startSpider() {
+    Spider.start();
+    var courseArr = StorageHelper.get('root', undefined);
+    Spider.autoEnqueueArr(courseArr.map(
+        item => '/course/view.php?id=' + item.id
+    ));
+    Spider.autoNext();
+}
 
+function atCourseRootPage() {
     var courseId = $_GET['id'];
     var $root = $("section#region-main");
     var dataArr = [];
     $root.find('.activity').each((idx, item) => {
         var $item = $(item);
-        for(var actionKey in actionArr) {
-            if($item.hasClass(actionKey)) {
-                actionArr[actionKey]($item);
-                succeed = true; break;
-            }
+        var id = $.endInt($item.attr('id'));
+        if($item.hasClass('folder')) {
+            Spider.autoEnqueueArr(['/mod/folder/view.php?id=' + id]);
         }
-        
         dataArr.push({
-            id: $.endInt($item.attr('id')),
+            id: id,
             name: $item.find(".instancename").pureText(),
         })
     });
@@ -110,6 +169,7 @@ function boot() {
     } else {
         atOtherPage();
     }
+    Spider.autoNext();
 }
 
 boot();
