@@ -43,7 +43,11 @@ var StorageHelper = (function(){
             localStorage[getKey(type, id, prefix)] = JSON.stringify(data);
         },
         get(type, id, prefix) {
-            return JSON.parse(localStorage[getKey(type, id, prefix)]);
+            try {
+                return JSON.parse(localStorage[getKey(type, id, prefix)]);
+            } catch(e) {
+                return [];
+            }
         }
     }
 })();

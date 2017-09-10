@@ -15,5 +15,15 @@ function traversalTree(callback) {
 }
 
 function display() {
-    traversalTree(console.log);
+    console.log("---Display Differences---");
+    traversalTree(function(type, id, curData) {
+        var oldData = StorageHelper.get(type, id, 'old');
+        // console.log(type, id, 'cur', curData, 'old', oldData);
+        var primaryKey = (type=='folder' ? 'href' : 'id');
+        var additionData = $.diffByKey(curData, oldData, primaryKey);
+        var subtractionData = $.diffByKey(oldData, curData, primaryKey);
+        if(additionData.length > 0 || subtractionData.length > 0) {
+            console.log(type, id, additionData, subtractionData);
+        }
+    });
 }
