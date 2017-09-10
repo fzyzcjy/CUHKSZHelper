@@ -10,6 +10,7 @@
 			"all_frames": true
 		}
 	],
+	"web_accessible_resources": ["index.template.html"],
 	"permissions": [
 		"activeTab"
 	]

@@ -52,3 +52,8 @@ var StorageHelper = (function(){
     }
 })();
 
+function isAtRootPage() {
+    var path = location.pathname;
+    return path == '' || path == '/' || path.startsWith('/index.php');
+}
+

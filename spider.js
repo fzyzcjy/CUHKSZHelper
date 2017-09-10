@@ -86,6 +86,7 @@ function atRootPage() {
         var $item = $(item);
         courseArr.push({
             id: $.endInt($item.attr('href')),
+            href: $item.attr('href'),
             name: $item.text(),
         });
     });
@@ -120,6 +121,7 @@ function atCourseRootPage() {
         
         dataArr.push({
             id: id,
+            href: '/mod/resource/view.php?id=' + id,
             name: $item.find(".instancename").pureText(),
             type: type,
         })
@@ -146,11 +148,6 @@ function atOtherPage() {
     //
 }
 
-function isAtRootPage() {
-    var path = location.pathname;
-    return path == '' || path == '/' || path.startsWith('/index.php');
-}
-
 function boot() {
     var path = location.pathname;
     if(isAtRootPage()) {
@@ -167,4 +164,4 @@ function boot() {
     }
 }
 
-boot();
+$(boot);
