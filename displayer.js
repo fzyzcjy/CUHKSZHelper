@@ -16,12 +16,26 @@ function traversalTree(callback) {
     }
 }
 
-function onInjectedDOMReady() {
-    $("#mh-start-spider").click(startSpider);
-    display();
+function markAllAsRead() {
+    for(var key in window.localStorage){
+        if(key.startsWith('cur')){
+            window.localStorage['old'+key.substr(3)] = window.localStorage[key];
+        }
+    }
+    renderDisplay();
 }
 
-function display() {
+function onInjectedDOMReady() {
+    initListener();
+    renderDisplay();
+}
+
+function initListener() {
+    $("#mh-start-spider").click(startSpider);
+    $("#mh-mark-read").click(markAllAsRead);
+}
+
+function renderDisplay() {
     var displayArr = [];
     traversalTree(function(type, id, curData, moreInfo) {
         var oldData = StorageHelper.get(type, id, 'old');
@@ -35,6 +49,7 @@ function display() {
         }
     });
     var $diffInfoUl = $("#mh-diff-info");
+    $diffInfoUl.empty();
     const DIFF_TYPE_TO_TEXT = {
         'add': '新增',
         'sub': '删除'
