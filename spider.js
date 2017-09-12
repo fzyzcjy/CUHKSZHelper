@@ -64,11 +64,10 @@ var Spider = (function(){
         autoNext() {
             if(!isRunning()) return;
             var url = WaitList.dequeue();
-            console.log("AutoNext", url, 'CurrentList', WaitList.all(), WaitList.all().length);
+            // console.log("AutoNext", url, 'CurrentList', WaitList.all(), WaitList.all().length);
+            console.log('AutoNext:', url, 'CurrentListLen:', WaitList.all().length);
             if(url) {
-                setTimeout(() => {
-                    location.href = url;
-                }, Math.random() * 2000 + 300 );
+                location.href = url;
             } else {
                 stopSpider();
             }
@@ -77,6 +76,18 @@ var Spider = (function(){
             if(!isRunning()) return;
             WaitList.enqueueArr(arr);
         },
+        autoSave(type, id, data, prefix) {
+            if(isRunning()) {
+                StorageHelper.save(type, id, data, prefix);
+            }
+        },
+        autoSleep(after) {
+            if(isRunning()) {
+                setTimeout(after, Math.random() * 1000);
+            } else {
+                after();
+            }
+        }
     }
 })();
 
@@ -90,10 +101,11 @@ function atRootPage() {
             name: $item.text(),
         });
     });
-    StorageHelper.save('root', undefined, courseArr);
+    Spider.autoSave('root', undefined, courseArr);
 }
 
 function startSpider() {
+    console.log("Start Spider");
     var courseArr = StorageHelper.get('root', undefined);
     Spider.start(courseArr.map(
         item => '/course/view.php?id=' + item.id
@@ -127,10 +139,16 @@ function atCourseRootPage() {
         })
     });
 
-    StorageHelper.save('course', courseId, dataArr);
+    Spider.autoSave('course', courseId, dataArr);
 }
 
 function atFolderPage() {
+    if($(".ygtvitem").length == 0) {
+        console.log("FolderPage: maybe not finish loading");
+        setTimeout(atFolderPage, 300);
+        return;
+    }
+
     var folderId = $_GET['id'];
     var fileInfoArr = [];
     $(".ygtvcontent a").each((idx, item) => {
@@ -141,7 +159,7 @@ function atFolderPage() {
         });
     });
 
-    StorageHelper.save('folder', folderId, fileInfoArr);
+    Spider.autoSave('folder', folderId, fileInfoArr);
 }
 
 function atOtherPage() {
@@ -153,14 +171,16 @@ function boot() {
     if(isAtRootPage()) {
         atRootPage();
     } else {
-        if(path.startsWith('/course/view.php')) {
-            atCourseRootPage();
-        } else if(path.startsWith('/mod/folder/view.php')) {
-            atFolderPage();
-        } else {
-            atOtherPage();
-        } 
-        Spider.autoNext();
+        Spider.autoSleep(() => {
+            if(path.startsWith('/course/view.php')) {
+                atCourseRootPage();
+            } else if(path.startsWith('/mod/folder/view.php')) {
+                atFolderPage();
+            } else {
+                atOtherPage();
+            } 
+            Spider.autoNext();
+        });
     }
 }
 

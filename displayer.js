@@ -16,6 +16,11 @@ function traversalTree(callback) {
     }
 }
 
+function onInjectedDOMReady() {
+    $("#mh-start-spider").click(startSpider);
+    display();
+}
+
 function display() {
     var displayArr = [];
     traversalTree(function(type, id, curData, moreInfo) {
@@ -53,7 +58,7 @@ function boot() {
     if(isAtRootPage()) {
         $.get(chrome.extension.getURL('/index.template.html'), function(data) {
             $(data).prependTo('#frontpage-course-list');
-            display();
+            onInjectedDOMReady();
         });
     }
 }
