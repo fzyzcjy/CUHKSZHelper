@@ -31,6 +31,7 @@ function onInjectedDOMReady() {
 }
 
 function initListener() {
+    stopSpider();
     $("#mh-start-spider").click(startSpider);
     $("#mh-mark-read").click(markAllAsRead);
 }
@@ -62,7 +63,7 @@ function renderDisplay() {
             console.log(item);
             var text = '[' + DIFF_TYPE_TO_TEXT[item.diffType] + '] ';
             if(item.moreInfo) {
-                text += item.moreInfo.course.name.substr(0,7) + ' - ';
+                text += '<a href="'+ item.moreInfo.course.href + '">' + item.moreInfo.course.name.substr(0,7) + '</a> - ';
             }
             text += '<a href="' + item.data.href + '">' + item.data.name + '</a>';
             $diffInfoUl.append('<li>' + text + '</li>');

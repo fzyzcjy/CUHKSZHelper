@@ -80,7 +80,6 @@ var Spider = (function(){
         autoNext() {
             if(!isRunning()) return;
             var url = WaitList.dequeue();
-            // console.log("AutoNext", url, 'CurrentList', WaitList.all(), WaitList.all().length);
             console.log('AutoNext:', url, 'CurrentListLen:', WaitList.all().length);
             if(url) {
                 location.href = url;
@@ -92,8 +91,8 @@ var Spider = (function(){
             if(!isRunning()) return;
             WaitList.enqueueArr(arr);
         },
-        autoSave(type, id, data, prefix) {
-            if(isRunning()) {
+        autoSave(type, id, data, prefix, doesForce) {
+            if(isRunning() || doesForce) {
                 StorageHelper.save(type, id, data, prefix);
             }
         },
@@ -117,7 +116,7 @@ function atRootPage() {
             name: $item.text(),
         });
     });
-    Spider.autoSave('root', undefined, courseArr);
+    Spider.autoSave('root', undefined, courseArr, undefined, true);
 }
 
 function startSpider() {
@@ -139,6 +138,7 @@ function atCourseRootPage() {
     $root.find('.activity').each((idx, item) => {
         var $item = $(item);
         var id = $.endInt($item.attr('id'));
+        var href = $item.find('a').attr('href');
         var type = $item[0].className
             .split(/\s+/)
             .filter(cls => cls != 'activity' && !cls.startsWith('modtype'))[0];
@@ -149,7 +149,7 @@ function atCourseRootPage() {
         
         dataArr.push({
             id: id,
-            href: '/mod/resource/view.php?id=' + id,
+            href: href,
             name: $item.find(".instancename").pureText(),
             type: type,
         })
