@@ -57,3 +57,7 @@ function isAtRootPage() {
     return path == '' || path == '/' || path.startsWith('/index.php');
 }
 
+function showGrp(grp) {
+    $(".grp").hide();
+    $(".grp-" + grp).show();
+}

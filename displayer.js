@@ -36,6 +36,7 @@ function initListener() {
 }
 
 function renderDisplay() {
+    showGrp('display');
     var displayArr = [];
     traversalTree(function(type, id, curData, moreInfo) {
         var oldData = StorageHelper.get(type, id, 'old');

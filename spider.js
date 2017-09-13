@@ -36,10 +36,11 @@ var Spider = (function(){
         return localStorage[IS_RUNNING_KEY] === 'true';
     };
 
-    const IFRAME_CNT = 3;
+    const IFRAME_CNT = 5;
 
     var stopSpider = function () {
         localStorage[IS_RUNNING_KEY] = 'false';
+
     }
 
     return {
@@ -52,13 +53,28 @@ var Spider = (function(){
             WaitList.enqueueArr(initialEnqueueArr);
 
             // add iframes
-            $("<div>", {id: "mh-iframe-wrapper"}).appendTo("body");
             for(var i = 0;i < IFRAME_CNT; ++i) {
+                var id ='mh-iframe-' + i;
+                if($('#'+id).length > 0) continue;
                 $('<iframe>', {
-                    id:  'mh-iframe-' + i,
+                    id:  id,
                     src: WaitList.dequeue(), // initial src
                 }).appendTo('#mh-iframe-wrapper');
             }
+
+            // render ui
+            showGrp('spider');
+            var intervalId = undefined;
+            var renderSpiderProgress = () => {
+                var waitListLen = WaitList.all().length;
+                $("#mh-spider-progress").text('Remaining: ' + waitListLen);
+                if(waitListLen == 0) {
+                    clearInterval(intervalId);
+                    renderDisplay(); // do this in main frame
+                }
+            }
+            var intervalId = setInterval(renderSpiderProgress, 1000);
+            renderSpiderProgress();
         },
         stop: stopSpider,
         autoNext() {
