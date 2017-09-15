@@ -40,7 +40,6 @@ var Spider = (function(){
 
     var stopSpider = function () {
         localStorage[IS_RUNNING_KEY] = 'false';
-
     }
 
     return {
@@ -92,6 +91,7 @@ var Spider = (function(){
             WaitList.enqueueArr(arr);
         },
         autoSave(type, id, data, prefix, doesForce) {
+            // console.log(data);
             if(isRunning() || doesForce) {
                 StorageHelper.save(type, id, data, prefix);
             }
@@ -142,6 +142,7 @@ function atCourseRootPage() {
         var type = $item[0].className
             .split(/\s+/)
             .filter(cls => cls != 'activity' && !cls.startsWith('modtype'))[0];
+        var parentText = $item.parents('.content').find('h3.sectionname span').text();
 
         if($item.hasClass('folder')) {
             Spider.autoEnqueueArr(['/mod/folder/view.php?id=' + id]);
@@ -150,7 +151,7 @@ function atCourseRootPage() {
         dataArr.push({
             id: id,
             href: href,
-            name: $item.find(".instancename").pureText(),
+            name: parentText + ' - ' + $item.find(".instancename").pureText(),
             type: type,
         })
     });

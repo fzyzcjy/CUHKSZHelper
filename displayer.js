@@ -1,19 +1,32 @@
-
 function traversalTree(callback) {
-    var rootData = StorageHelper.get('root');
-    callback('root', undefined, rootData);
-    for(var rootItem of rootData) {
-        var courseData = StorageHelper.get('course', rootItem.id);
-        callback('course', rootItem.id, courseData);
-        for(var courseItem of courseData) {
-            if(courseItem.type == 'folder') {
-                var folderData = StorageHelper.get('folder', courseItem.id);
-                callback('folder', courseItem.id, folderData, {
-                    course: rootItem,
-                });
+    var displayArr = [];
+    var solve = function(type, chainArr, children) {
+        var curData = children;
+        var oldData = StorageHelper.get(type, (chainArr[chainArr.length-1]||{}).id, 'old');
+        var primaryKey = (type=='folder' ? 'href' : 'id');
+        for(var item of $.diffByKey(curData, oldData, primaryKey)) {
+            displayArr.push({diffType: 'add', data: item, chainArr: chainArr});
+        }
+        for(var item of $.diffByKey(oldData, curData, primaryKey)) {
+            displayArr.push({diffType: 'sub', data: item, chainArr: chainArr});
+        }
+    };
+
+    var rootChildren = StorageHelper.get('root');
+    solve('root', [], rootChildren);
+    for(var course of rootChildren) {
+        var courseChildren = StorageHelper.get('course', course.id);
+        solve('course', [course], courseChildren);
+        for(var courseChild of courseChildren) {
+            if(courseChild.type == 'folder') {
+                var folder = courseChild;
+                var folderChildren = StorageHelper.get('folder', folder.id);
+                solve('folder', [course, folder], folderChildren);
             }
         }
     }
+
+    return displayArr;
 }
 
 function markAllAsRead() {
@@ -38,20 +51,9 @@ function initListener() {
 
 function renderDisplay() {
     showGrp('display');
-    var displayArr = [];
-    traversalTree(function(type, id, curData, moreInfo) {
-        var oldData = StorageHelper.get(type, id, 'old');
-        // console.log(type, id, 'cur', curData, 'old', oldData);
-        var primaryKey = (type=='folder' ? 'href' : 'id');
-        for(var item of $.diffByKey(curData, oldData, primaryKey)) {
-            displayArr.push({diffType: 'add', data: item, moreInfo});
-        }
-        for(var item of $.diffByKey(oldData, curData, primaryKey)) {
-            displayArr.push({diffType: 'sub', data: item, moreInfo});
-        }
-    });
     var $diffInfoUl = $("#mh-diff-info");
     $diffInfoUl.empty();
+    var displayArr = traversalTree();
     const DIFF_TYPE_TO_TEXT = {
         'add': '新增',
         'sub': '删除'
@@ -60,12 +62,28 @@ function renderDisplay() {
         $diffInfoUl.append('<li>Nothing</li>');
     } else {
         for(var item of displayArr) {
-            console.log(item);
             var text = '[' + DIFF_TYPE_TO_TEXT[item.diffType] + '] ';
-            if(item.moreInfo) {
-                text += '<a href="'+ item.moreInfo.course.href + '">' + item.moreInfo.course.name.substr(0,7) + '</a> - ';
+            if(item.diffType=='sub') text += '<del>';
+            var fullChainArr = item.chainArr.concat(item.data);
+            for(var i = 0;i<fullChainArr.length; ++i) {
+                var chainItem = fullChainArr[i];
+                var isFirst = i == 0;
+                var isLast = i == fullChainArr.length - 1;
+                var innerText = (isFirst)
+                    ? chainItem.name.substr(0, 7)
+                    : chainItem.name;
+                if(isLast) {
+                    var splitArr = innerText.split(' - ');
+                    if(splitArr.length==2) {
+                        innerText = splitArr[0] + ' - <b>' + splitArr[1] + '</b>';
+                    } else {
+                        innerText = '<b>' + innerText + '</b>';
+                    }
+                }
+                text +=
+                    '<a href="'+ chainItem.href + '">' + innerText + '</a>' + (isLast?'':' - ');
             }
-            text += '<a href="' + item.data.href + '">' + item.data.name + '</a>';
+            if(item.diffType=='sub') text += '</del>';
             $diffInfoUl.append('<li>' + text + '</li>');
         }
     }
