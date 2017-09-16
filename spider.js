@@ -37,6 +37,7 @@ var Spider = (function(){
     };
 
     const IFRAME_CNT = 5;
+    const END_URL = location.origin + '/end';
 
     var stopSpider = function () {
         localStorage[IS_RUNNING_KEY] = 'false';
@@ -70,8 +71,21 @@ var Spider = (function(){
             var renderSpiderProgress = () => {
                 var waitListLen = WaitList.all().length;
                 $("#mh-spider-wait-list-len").text('' + waitListLen);
-                if(waitListLen == 0) {
+                var isAllFrameEnd = () => {
+                    for(var i = 0;i < IFRAME_CNT; ++i) {
+                        var id ='mh-iframe-' + i;
+                        var $iframe = $('#'+id);
+                        // https://stackoverflow.com/questions/938180/
+                        if($iframe[0].contentWindow.location.href != END_URL) {
+                            console.log("Not all frame end", $iframe);
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+                if(waitListLen == 0 && isAllFrameEnd()) {
                     clearInterval(intervalId);
+                    stopSpider();
                     if(localStorage['inited'] !== 'true') {
                         markAllAsRead();
                     }
@@ -85,20 +99,16 @@ var Spider = (function(){
         stop: stopSpider,
         autoNext() {
             if(!isRunning()) return;
-            var url = WaitList.dequeue();
-            console.log('AutoNext:', url, 'CurrentListLen:', WaitList.all().length);
-            if(url) {
-                location.href = url;
-            } else {
-                stopSpider();
-            }
+            var url = WaitList.dequeue() || END_URL;
+            log('AutoNext:', url, 'CurrentListLen:', WaitList.all().length);
+            location.href = url;
         },
         autoEnqueueArr(arr) {
             if(!isRunning()) return;
             WaitList.enqueueArr(arr);
         },
         autoSave(type, id, data, prefix, doesForce) {
-            // console.log(data);
+            // log(data);
             if(isRunning() || doesForce) {
                 StorageHelper.save(type, id, data, prefix);
             }
@@ -127,7 +137,7 @@ function atRootPage() {
 }
 
 function startSpider() {
-    console.log("Start Spider");
+    log("Start Spider");
     var courseArr = StorageHelper.get('root', undefined);
     Spider.start(courseArr.map(
         item => '/course/view.php?id=' + item.id
@@ -164,11 +174,13 @@ function atCourseRootPage() {
     });
 
     Spider.autoSave('course', courseId, dataArr);
+    Spider.autoNext();
 }
 
-function atFolderPage() {
-    if($(".ygtvitem").length == 0) {
-        console.log("FolderPage: maybe not finish loading");
+function atFolderPage(disableRetry) {
+
+    if((!disableRetry) && $(".ygtvitem").length == 0) {
+        log("FolderPage: not loaded and wait");
         setTimeout(atFolderPage, 300);
         return;
     }
@@ -183,11 +195,19 @@ function atFolderPage() {
         });
     });
 
-    Spider.autoSave('folder', folderId, fileInfoArr);
+    if((!disableRetry) && fileInfoArr.length == 0) {
+        log("FolderPage: empty result and retry");
+        setTimeout(() => {
+            atFolderPage(true);
+        }, 500);
+    } else {
+        Spider.autoSave('folder', folderId, fileInfoArr);
+        Spider.autoNext();
+    }
 }
 
 function atOtherPage() {
-    //
+    Spider.autoNext();
 }
 
 function boot() {
@@ -203,7 +223,6 @@ function boot() {
             } else {
                 atOtherPage();
             } 
-            Spider.autoNext();
         });
     }
 }
