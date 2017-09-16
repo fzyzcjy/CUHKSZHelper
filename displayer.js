@@ -76,7 +76,7 @@ function renderDisplay() {
                         ? chainItem.name.substr(0, 7)
                         : chainItem.name;
                     if(isLast) {
-                        var splitArr = innerText.split(' - ');
+                        var splitArr = innerText.split('|');
                         if(splitArr.length==2) {
                             innerText = splitArr[0] + ' - <b>' + splitArr[1] + '</b>';
                         } else {

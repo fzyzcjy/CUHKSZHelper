@@ -54,11 +54,14 @@ var Spider = (function(){
             // add iframes
             for(var i = 0;i < IFRAME_CNT; ++i) {
                 var id ='mh-iframe-' + i;
-                if($('#'+id).length > 0) continue;
-                $('<iframe>', {
-                    id:  id,
-                    src: WaitList.dequeue(), // initial src
-                }).appendTo('#mh-iframe-wrapper');
+                var $iframe = $('#'+id);
+                if($iframe.length == 0) {
+                    $iframe = $('<iframe>', {
+                        id:  id,
+                    });
+                    $iframe.appendTo('#mh-iframe-wrapper');
+                }
+                $iframe.attr('src', WaitList.dequeue());
             }
 
             // render ui
@@ -155,7 +158,7 @@ function atCourseRootPage() {
         dataArr.push({
             id: id,
             href: href,
-            name: parentText + ' - ' + $item.find(".instancename").pureText(),
+            name: parentText + '|' + $item.find(".instancename").pureText(),
             type: type,
         })
     });
