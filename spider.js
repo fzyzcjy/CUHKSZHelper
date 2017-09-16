@@ -66,9 +66,13 @@ var Spider = (function(){
             var intervalId = undefined;
             var renderSpiderProgress = () => {
                 var waitListLen = WaitList.all().length;
-                $("#mh-spider-progress").text('Remaining: ' + waitListLen);
+                $("#mh-spider-wait-list-len").text('' + waitListLen);
                 if(waitListLen == 0) {
                     clearInterval(intervalId);
+                    if(localStorage['inited'] !== 'true') {
+                        markAllAsRead();
+                    }
+                    localStorage['inited'] = 'true';
                     renderDisplay(); // do this in main frame
                 }
             }

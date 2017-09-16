@@ -1,22 +1,33 @@
 <div id="mh" class="courses">
-    <h2>Helper Information</h2>
-    <div class="coursebox clearfix even">
+    <h2>Moodle Helper</h2>
+    <div class="box generalbox grp grp-init">
+        <input class="mh-start-spider" type="button" value="Init(May Take Some Time)"/>
+    </div>
+    <div class="coursebox clearfix even grp grp-spider">
+        <div class="info">
+            <h3 class="coursename">
+                <a>Refreshing...</a>
+            </h3>
+        </div>
+        <div class="content">
+            <ul>
+                Remain: <b><span id="mh-spider-wait-list-len"></span></b><br>
+                During this process, please do not refresh or close the page, or there may be unexpected consequences.
+            </ul>
+        </div>
+    </div>
+    <div class="coursebox clearfix even grp grp-display">
         <div class="info">
             <h3 class="coursename">
                 <a>Changed Things</a>
             </h3>
         </div>
         <div class="content">
-            <ul id="mh-diff-info" class="grp grp-display"></ul>
-            <ul class="grp grp-spider">
-                <span>Refreshing...</span>
-                <br>
-                <span id="mh-spider-progress"></span>
-            </ul>
+            <ul id="mh-diff-info"></ul>
         </div>
         <div class="box generalbox">
-            <input id="mh-mark-read" class="grp grp-display" type="button" value="Mark All As Read"/>
-            <input id="mh-start-spider" class="grp grp-display" type="button" value="Refresh(May Take Some Time)"/>
+            <input id="mh-mark-read" type="button" value="Mark All As Read"/>
+            <input class="mh-start-spider" type="button" value="Refresh(May Take Some Time)"/>
         </div>
     </div>
     <div id="mh-iframe-wrapper"></div>

@@ -45,46 +45,50 @@ function onInjectedDOMReady() {
 
 function initListener() {
     stopSpider();
-    $("#mh-start-spider").click(startSpider);
+    $(".mh-start-spider").click(startSpider);
     $("#mh-mark-read").click(markAllAsRead);
 }
 
 function renderDisplay() {
-    showGrp('display');
-    var $diffInfoUl = $("#mh-diff-info");
-    $diffInfoUl.empty();
-    var displayArr = traversalTree();
-    const DIFF_TYPE_TO_TEXT = {
-        'add': '新增',
-        'sub': '删除'
-    }
-    if(displayArr.length==0) {
-        $diffInfoUl.append('<li>Nothing</li>');
+    if(localStorage['inited'] !== 'true') {
+        showGrp('init');
     } else {
-        for(var item of displayArr) {
-            var text = '[' + DIFF_TYPE_TO_TEXT[item.diffType] + '] ';
-            if(item.diffType=='sub') text += '<del>';
-            var fullChainArr = item.chainArr.concat(item.data);
-            for(var i = 0;i<fullChainArr.length; ++i) {
-                var chainItem = fullChainArr[i];
-                var isFirst = i == 0;
-                var isLast = i == fullChainArr.length - 1;
-                var innerText = (isFirst)
-                    ? chainItem.name.substr(0, 7)
-                    : chainItem.name;
-                if(isLast) {
-                    var splitArr = innerText.split(' - ');
-                    if(splitArr.length==2) {
-                        innerText = splitArr[0] + ' - <b>' + splitArr[1] + '</b>';
-                    } else {
-                        innerText = '<b>' + innerText + '</b>';
+        showGrp('display');
+        var $diffInfoUl = $("#mh-diff-info");
+        $diffInfoUl.empty();
+        var displayArr = traversalTree();
+        const DIFF_TYPE_TO_TEXT = {
+            'add': 'NEW',
+            'sub': 'DEL'
+        }
+        if(displayArr.length==0) {
+            $diffInfoUl.append('<li>Nothing changed. You can click the *refresh* button below after a while to check what\'s new.</li>');
+        } else {
+            for(var item of displayArr) {
+                var text = '<span class="grey-text">[' + DIFF_TYPE_TO_TEXT[item.diffType] + ']</span> ';
+                if(item.diffType=='sub') text += '<del>';
+                var fullChainArr = item.chainArr.concat(item.data);
+                for(var i = 0;i<fullChainArr.length; ++i) {
+                    var chainItem = fullChainArr[i];
+                    var isFirst = i == 0;
+                    var isLast = i == fullChainArr.length - 1;
+                    var innerText = (isFirst)
+                        ? chainItem.name.substr(0, 7)
+                        : chainItem.name;
+                    if(isLast) {
+                        var splitArr = innerText.split(' - ');
+                        if(splitArr.length==2) {
+                            innerText = splitArr[0] + ' - <b>' + splitArr[1] + '</b>';
+                        } else {
+                            innerText = '<b>' + innerText + '</b>';
+                        }
                     }
+                    text +=
+                        '<a href="'+ chainItem.href + '">' + innerText + '</a>' + (isLast?'':' - ');
                 }
-                text +=
-                    '<a href="'+ chainItem.href + '">' + innerText + '</a>' + (isLast?'':' - ');
+                if(item.diffType=='sub') text += '</del>';
+                $diffInfoUl.append('<li>' + text + '</li>');
             }
-            if(item.diffType=='sub') text += '</del>';
-            $diffInfoUl.append('<li>' + text + '</li>');
         }
     }
 }
