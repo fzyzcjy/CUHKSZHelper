@@ -46,6 +46,7 @@ function onInjectedDOMReady() {
 function initListener() {
     stopSpider();
     $(".mh-start-spider").click(startSpider);
+    $(".mh-stop-spider").click(stopSpider);
     $("#mh-mark-read").click(markAllAsRead);
 }
 
