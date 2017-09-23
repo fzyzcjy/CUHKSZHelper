@@ -211,6 +211,7 @@ function atOtherPage() {
 }
 
 function boot() {
+    if(!inIframe()) return;
     var path = location.pathname;
     if(isAtRootPage()) {
         atRootPage();

@@ -66,3 +66,11 @@ function log() {
     var prefix = location.pathname + location.search;
     console.log('['+prefix+']', ...arguments);
 }
+
+function inIframe () {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        return true;
+    }
+}
