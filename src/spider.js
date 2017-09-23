@@ -14,7 +14,9 @@ var Spider = (function(){
         }
         return {
             enqueueArr(arr) {
-                set(get().concat(arr));
+                console.log(arr);
+                var old = get();
+                set(old.concat(arr).unique());
             },
             dequeue() {
                 var data = get();
