@@ -4,4 +4,6 @@ This is a moodle helper for [CUHKSZ moodle system](https://elearning.cuhk.edu.cn
 
 This is just a minimum version, a prototype of what will be done. So the function will be enhanced greatly in the future.
 
+This is developed in a very short time and I don't spend much time thinking the structure of codes. So please don't laugh at me for the messy code. :)
+
 Author: Tom Chen, CUHKSZ, FZYZ

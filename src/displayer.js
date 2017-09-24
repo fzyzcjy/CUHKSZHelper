@@ -59,16 +59,17 @@ function renderDisplay() {
         $diffInfoUl.empty();
         var displayArr = traversalTree();
         const DIFF_TYPE_TO_TEXT = {
-            'add': 'NEW',
-            'sub': 'DEL'
+            'add': '+',
+            'sub': '-'
         }
         if(displayArr.length==0) {
             $diffInfoUl.append('<li>Nothing changed. You can click the *refresh* button below after a while to check what\'s new.</li>');
         } else {
             for(var item of displayArr) {
-                var text = '<span class="grey-text">[' + DIFF_TYPE_TO_TEXT[item.diffType] + ']</span> ';
+                var text = '<span class="grey-text">' + DIFF_TYPE_TO_TEXT[item.diffType] + '</span> ';
                 if(item.diffType=='sub') text += '<del>';
                 var fullChainArr = item.chainArr.concat(item.data);
+                var isAssignment = false;
                 for(var i = 0;i<fullChainArr.length; ++i) {
                     var chainItem = fullChainArr[i];
                     var isFirst = i == 0;
@@ -76,6 +77,9 @@ function renderDisplay() {
                     var innerText = (isFirst)
                         ? chainItem.name.substr(0, 7)
                         : chainItem.name;
+                    isAssignment = isAssignment 
+                        | ((chainItem.href||'').indexOf('/assign/')!=-1)
+                        | ((chainItem.name||'').toLowerCase().indexOf('assignment')!=-1);
                     if(isLast) {
                         var splitArr = innerText.split('|');
                         if(splitArr.length==2) {
@@ -88,7 +92,12 @@ function renderDisplay() {
                         '<a href="'+ chainItem.href + '">' + innerText + '</a>' + (isLast?'':' - ');
                 }
                 if(item.diffType=='sub') text += '</del>';
-                $diffInfoUl.append('<li>' + text + '</li>');
+                var $ele = $('<li>' + text + '</li>');
+                if(isAssignment) {
+                    $ele.css('color', 'rgba(111,19,106,0.9)');
+                    $ele.css('font-weight', 'bold');
+                }
+                $ele.appendTo($diffInfoUl);
             }
         }
     }
