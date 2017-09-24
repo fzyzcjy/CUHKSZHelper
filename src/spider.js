@@ -1,34 +1,37 @@
 var Spider = (function(){
 
     var WaitList = (function(){
-        const KEY = 'waitList';
+        const KEY = 'waitListData';
+		const EMPTY_OBJ = {data: [], curIdx: 0};
         var get = function() {
             try {
                 return JSON.parse(localStorage[KEY]);
             } catch(e) {
-                return [];
+                return EMPTY_OBJ;
             }
-        }
+        };
         var set = function(data) {
             localStorage[KEY] = JSON.stringify(data);
-        }
+        };
         return {
             enqueueArr(arr) {
-                console.log(arr);
-                var old = get();
-                set(old.concat(arr).unique());
+                var obj = get();
+				obj.data = obj.data.concat(arr).unique();
+                set(obj);
+                log("enqueue", obj);
             },
             dequeue() {
-                var data = get();
-                var result = data.shift();
-                set(data);
+                var obj = get();
+                var result = obj.data[obj.curIdx];
+				obj.curIdx = Math.min(obj.curIdx+1, obj.data.length);
+                set(obj);
                 return result;
             },
-            all() {
+            getObj() {
                 return get();
             },
             clear() {
-                set([]);
+                set(EMPTY_OBJ);
             }
         }
     })();
@@ -44,6 +47,17 @@ var Spider = (function(){
     var stopSpider = function () {
         localStorage[IS_RUNNING_KEY] = 'false';
     }
+	
+	var getIFrameUrlArr = function() {
+		var result = [];
+		for(var i = 0;i < IFRAME_CNT; ++i) {
+			var id ='mh-iframe-' + i;
+			var $iframe = $('#'+id);
+			// https://stackoverflow.com/questions/938180/
+			result.push($iframe[0].contentWindow.location.href);
+		}
+		return result;
+	};
 
     return {
         start(initialEnqueueArr) {
@@ -71,21 +85,10 @@ var Spider = (function(){
             showGrp('spider');
             var intervalId = undefined;
             var renderSpiderProgress = () => {
-                var waitListLen = WaitList.all().length;
-                $("#mh-spider-wait-list-len").text('' + waitListLen);
-                var isAllFrameEnd = () => {
-                    for(var i = 0;i < IFRAME_CNT; ++i) {
-                        var id ='mh-iframe-' + i;
-                        var $iframe = $('#'+id);
-                        // https://stackoverflow.com/questions/938180/
-                        if($iframe[0].contentWindow.location.href != END_URL) {
-                            console.log("Not all frame end", $iframe);
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-                if(waitListLen == 0 && isAllFrameEnd()) {
+				var waitListObj = WaitList.getObj();
+                $("#mh-spider-wait-list-len").text(waitListObj.curIdx + '/' + waitListObj.data.length);
+                var isAllFrameEnd = () => (!getIFrameUrlArr().some(url => url != END_URL));
+                if((waitListObj.data.length <= waitListObj.curIdx) && isAllFrameEnd()) {
                     clearInterval(intervalId);
                     stopSpider();
                     if(localStorage['inited'] !== 'true') {
@@ -102,15 +105,14 @@ var Spider = (function(){
         autoNext() {
             if(!isRunning()) return;
             var url = WaitList.dequeue() || END_URL;
-            log('AutoNext:', url, 'CurrentListLen:', WaitList.all().length);
-            location.href = url;
+            log('AutoNext:', url, 'CurrentListLen:', WaitList.getObj().data.length);
+            if(location.href != url) location.href = url;
         },
         autoEnqueueArr(arr) {
             if(!isRunning()) return;
             WaitList.enqueueArr(arr);
         },
         autoSave(type, id, data, prefix, doesForce) {
-            // log(data);
             if(isRunning() || doesForce) {
                 StorageHelper.save(type, id, data, prefix);
             }
@@ -213,11 +215,11 @@ function atOtherPage() {
 }
 
 function boot() {
-    if(!inIframe()) return;
     var path = location.pathname;
     if(isAtRootPage()) {
         atRootPage();
     } else {
+        if(!inIframe()) return;
         Spider.autoSleep(() => {
             if(path.startsWith('/course/view.php')) {
                 atCourseRootPage();
