@@ -70,6 +70,7 @@ function renderDisplay() {
                 if(item.diffType=='sub') text += '<del>';
                 var fullChainArr = item.chainArr.concat(item.data);
                 var isAssignment = false;
+                var isQuiz = false;
                 for(var i = 0;i<fullChainArr.length; ++i) {
                     var chainItem = fullChainArr[i];
                     var isFirst = i == 0;
@@ -80,6 +81,8 @@ function renderDisplay() {
                     isAssignment = isAssignment 
                         | ((chainItem.href||'').indexOf('/assign/')!=-1)
                         | ((chainItem.name||'').toLowerCase().indexOf('assignment')!=-1);
+                    isQuiz = isQuiz 
+                        | ((chainItem.href||'')+(chainItem.name||'')).indexOf('quiz')!=-1;
                     if(isLast) {
                         var splitArr = innerText.split('|');
                         if(splitArr.length==2) {
@@ -93,7 +96,7 @@ function renderDisplay() {
                 }
                 if(item.diffType=='sub') text += '</del>';
                 var $ele = $('<li>' + text + '</li>');
-                if(isAssignment) {
+                if(isAssignment || isQuiz) {
                     $ele.css('color', 'rgba(111,19,106,0.9)');
                     $ele.css('font-weight', 'bold');
                 }
