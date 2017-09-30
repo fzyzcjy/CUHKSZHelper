@@ -2,13 +2,43 @@
     const ANS_KEY_ARR = ['1','2','3','4','5'];
     const POS_CONTROL_KEY_ARR = ['<','>'];
 
-    var curQue = (() => {
-        var curQueIdx = 1;
+    var QuizStorage = (() => {
+        const DEFAULT_OBJ = {
+            curQueIdx: 1,
+            checkingAllAbove: false,
+        };
+        var quizAttemptId = $_GET['attempt'];
+        var getObj = () => {
+            var raw = StorageHelper.get('quiz', quizAttemptId);
+            return (raw.length == 0) ? DEFAULT_OBJ : raw;
+        };
+        return {
+            get(objKey) {
+                return getObj()[objKey];
+            },
+            save(objKey, val) {
+                var obj = getObj();
+                obj[objKey] = val;
+                StorageHelper.save('quiz', quizAttemptId, obj);
+            }
+        };
+    })();
 
+    var curQue = (() => {
         var renderCurQue = (disableScrollTo) => {
-            $(".mh-que-active").removeClass("mh-que-active");
             var $que = curQue.getQueEl();
+
+            $(".mh-que-active").removeClass("mh-que-active");
             $que.addClass("mh-que-active");
+
+            $("#mh-check-all-above").remove();
+            $que.find('.im-controls').append(
+                '<input ' + 
+                    'id="mh-check-all-above" ' + 
+                    'value="Check All Above" ' + 
+                    'type="button" ' + 
+                '/>');
+
             if(!disableScrollTo) {
                 $('html, body')
                     .stop()
@@ -19,14 +49,14 @@
         }
 
         var getQueEl = (queIdx) => {
-            queIdx = queIdx==undefined ? curQueIdx : queIdx;
+            queIdx = queIdx==undefined ? QuizStorage.get('curQueIdx') : queIdx;
             return $("#q" + queIdx);
         }
 
         var move = (step) => {
-            var newQueIdx = curQueIdx + step;
+            var newQueIdx = QuizStorage.get('curQueIdx') + step;
             if(getQueEl(newQueIdx).length > 0) {
-                curQueIdx = newQueIdx;
+                QuizStorage.save('curQueIdx', newQueIdx);
             }
             renderCurQue();
         }
@@ -47,13 +77,17 @@
 
     function onAnsClick(ansIdx) {
         var $que = curQue.getQueEl();
-        var $ans = $que.find('input[type=radio][id$='+ansIdx+']');
+        var $ans = $que.find('input[type=radio][id$=answer'+ansIdx+']');
         $ans.click();
         curQue.next();
     }
 
     function onPosControlClick(deltaPos) {
         curQue.move(deltaPos);
+    }
+
+    function getIdFromQue($que) {
+        return parseInt($que.attr('id').substr(1))
     }
 
     var keyMapping = (() => {
@@ -74,8 +108,40 @@
         runner();
     }
 
+    function autoContiCheckAllAbove() {
+        if(QuizStorage.get('checkingAllAbove') === true) {
+            onCheckAllAbove();
+        }
+    }
+
+    function onCheckAllAbove() {
+        console.log("Check All Above");
+        QuizStorage.save('checkingAllAbove', true);
+        var $needClickCheckArr = $("input.submit.btn[value=Check]").filter((idx, el) => {
+            var $que = $(el).parents('.que');
+            var isAbove = (getIdFromQue($que) <= getIdFromQue(curQue.getQueEl()));
+            var isAnswered = ($que.find('.answer input[type=radio]:checked').length > 0);
+            return isAbove && isAnswered;
+        });
+
+        $("#mh-hint-checking").show();
+        if($needClickCheckArr.length > 0) {
+            $("#mh-hint-checking-remain").text($needClickCheckArr.length);
+            setTimeout(() => {
+                $($needClickCheckArr[0]).click();
+            }, 50);
+        } else {
+            setTimeout(() => {
+                $("#mh-hint-checking").hide();
+            }, 1000);
+            $("#mh-hint-checking-remain").text('ALL END!');
+            QuizStorage.save('checkingAllAbove', false);
+        }
+    }
+
     function onInjectedDOMReady() {
-        //TODO
+        // put it here, because it refreshes the hint div, which is loaded by the template html
+        autoContiCheckAllAbove();
     }
 
     function bootQuiz() {
@@ -84,23 +150,14 @@
         }
 
         $("body").keydown(onKeyDown);
+        $("body").on('click', '#mh-check-all-above', onCheckAllAbove);
         curQue.init();
 
         $.get(chrome.extension.getURL('/quiz.template.html'), function(data) {
             $(data).prependTo('#region-main div[role=main] form>div');
             onInjectedDOMReady();
         });
-
-        // $(".answer input[type='radio']").click((e) => {
-        //     var $target = $(e.target);
-        //     var $que = $target.parents('.que.multichoice');
-        //     var rawInputId = $target.attr('id');
-        //     var jqInputId = rawInputId.replace(':','\\:');
-        //     var queId = $que.attr('id');
-        //     console.log(jqInputId, queId);
-        // });
     }
 
     $(bootQuiz);
-
 })();
