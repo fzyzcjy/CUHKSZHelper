@@ -2,12 +2,18 @@
 	"manifest_version": 2,
 	"name": "Moodle Helper",
 	"author": "CJY@CUHKSZ",
-	"version": "0.1",
+	"version": "0.1.2",
 	"content_scripts": [
 		{
 			"matches": ["https://elearning.cuhk.edu.cn/*"],
 			"css": ["style.css"],
-			"js": ["jquery.min.js", "helper.js", "spider.js", "displayer.js"],
+			"js": [
+				"jquery.min.js",
+				"helper.js",
+				"spider.js",
+				"displayer.js",
+				"quiz.js"
+			],
 			"all_frames": true
 		}
 	],

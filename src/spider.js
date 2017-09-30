@@ -214,7 +214,7 @@ function atOtherPage() {
     Spider.autoNext();
 }
 
-function boot() {
+function bootSpider() {
     var path = location.pathname;
     if(isAtRootPage()) {
         atRootPage();
@@ -232,4 +232,4 @@ function boot() {
     }
 }
 
-$(boot);
+$(bootSpider);

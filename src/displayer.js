@@ -103,7 +103,7 @@ function renderDisplay() {
     }
 }
 
-function boot() {
+function bootDisplayer() {
     if(inIframe()) return;
     if(isAtRootPage()) {
         $.get(chrome.extension.getURL('/index.template.html'), function(data) {
@@ -113,4 +113,4 @@ function boot() {
     }
 }
 
-$(boot);
+$(bootDisplayer);
