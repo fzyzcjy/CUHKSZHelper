@@ -17,7 +17,7 @@
 			"all_frames": true
 		}
 	],
-	"web_accessible_resources": ["index.template.html"],
+	"web_accessible_resources": ["index.template.html", "quiz.template.html"],
 	"permissions": [
 		"activeTab"
 	]

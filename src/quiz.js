@@ -5,6 +5,19 @@
     var curQue = (() => {
         var curQueIdx = 1;
 
+        var renderCurQue = (disableScrollTo) => {
+            $(".mh-que-active").removeClass("mh-que-active");
+            var $que = curQue.getQueEl();
+            $que.addClass("mh-que-active");
+            if(!disableScrollTo) {
+                $('html, body')
+                    .stop()
+                    .animate({
+                        scrollTop: $que.offset().top
+                    }, 200);
+            };
+        }
+
         var getQueEl = (queIdx) => {
             queIdx = queIdx==undefined ? curQueIdx : queIdx;
             return $("#q" + queIdx);
@@ -18,25 +31,19 @@
             renderCurQue();
         }
 
+        var init = () => {
+            renderCurQue(true);
+        }
+
         return {
             next() {
                 move(1);
             },
             move: move,
             getQueEl: getQueEl,
+            init: init,
         }
     })();
-
-    function renderCurQue() {
-        $(".mh-que-active").removeClass("mh-que-active");
-        var $que = curQue.getQueEl();
-        $que.addClass("mh-que-active");
-        setTimeout(() => {
-            $('html, body').animate({
-                scrollTop: $que.offset().top
-            }, 200);
-        }, 0);
-    }
 
     function onAnsClick(ansIdx) {
         var $que = curQue.getQueEl();
@@ -67,13 +74,22 @@
         runner();
     }
 
+    function onInjectedDOMReady() {
+        //TODO
+    }
+
     function bootQuiz() {
         if(location.href.indexOf('quiz') == -1 || location.href.indexOf('attempt') == -1) {
             return;
         }
 
         $("body").keydown(onKeyDown);
-        renderCurQue();
+        curQue.init();
+
+        $.get(chrome.extension.getURL('/quiz.template.html'), function(data) {
+            $(data).prependTo('#region-main div[role=main] form>div');
+            onInjectedDOMReady();
+        });
 
         // $(".answer input[type='radio']").click((e) => {
         //     var $target = $(e.target);
