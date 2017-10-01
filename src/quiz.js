@@ -26,24 +26,27 @@
     })();
 
     var curQue = (() => {
+        var createCheckAllAboveBtn = (toCheckCnt, customText) => {
+            var text = customText || 'Check All Above';
+            var checkAllAboveText =
+                (toCheckCnt>=RECOMMENT_CHECK_CNT?'[RECOMMEND] ':'') +
+                text + '(' + toCheckCnt+' Questions)';
+            return $('<input ' + 
+                    'class="mh-check-all-above" ' + 
+                    'value="'+checkAllAboveText+'" ' + 
+                    'type="button" ' + 
+                    (toCheckCnt>=RECOMMENT_CHECK_CNT?'style="font-weight: bold; color: rgba(111, 19, 106, 0.9)"':'') +
+                '/>');
+        }
+
         var renderCurQue = (disableScrollTo) => {
             var $que = curQue.getCurQueEl();
 
             $(".mh-que-active").removeClass("mh-que-active");
             $que.addClass("mh-que-active");
 
-            var toCheckCnt = getAvailableCheckElArr().length;
-            var checkAllAboveText =
-                (toCheckCnt>=RECOMMENT_CHECK_CNT?'[RECOMMEND] ':'') +
-                'Check All Above (' + toCheckCnt+' Questions)';
-            $("#mh-check-all-above").remove();
-            $que.find('.im-controls').append(
-                '<input ' + 
-                    'id="mh-check-all-above" ' + 
-                    'value="'+checkAllAboveText+'" ' + 
-                    'type="button" ' + 
-                    (toCheckCnt>=RECOMMENT_CHECK_CNT?'style="font-weight: bold; color: rgba(111, 19, 106, 0.9)"':'') +
-                '/>');
+            $(".mh-check-all-above").remove();
+            $que.find('.im-controls').append(createCheckAllAboveBtn(getAvailableCheckElArr().length));
 
             if(!disableScrollTo) {
                 $('html, body')
@@ -54,10 +57,9 @@
             };
 
             // about `Next page`
-            // var $nextPageBtn = $("input[name=next][value='Next page']");
-            // var $prevPageBtn = $("input[name=previous][value='Previous page']");
-            // console.log($nextPageBtn, $prevPageBtn);
-
+            var $nextBtn = $("input[name=next]"); // next or *finish attempt*
+            // var $prevBtn = $("input[name=previous]");
+            $nextBtn.parent().append(createCheckAllAboveBtn(getAvailableCheckElArr(true).length, 'Check All Page').addClass('mod_quiz-next-nav'));
         }
 
         var getQueEl = (queIdx) => {
@@ -136,12 +138,12 @@
         }
     }
 
-    function getAvailableCheckElArr() {
+    function getAvailableCheckElArr(noNeedAboveCur) {
         return $("input.submit.btn[value=Check]").filter((idx, el) => {
             var $que = $(el).parents('.que');
             var isAbove = (getIdFromQue($que) <= getIdFromQue(curQue.getCurQueEl()));
             var isAnswered = ($que.find('.answer input[type=radio]:checked').length > 0);
-            return isAbove && isAnswered;
+            return (noNeedAboveCur || isAbove) && isAnswered;
         });
 
     }
@@ -176,7 +178,7 @@
         }
 
         $("body").keydown(onKeyDown);
-        $("body").on('click', '#mh-check-all-above', onCheckAllAbove);
+        $("body").on('click', '.mh-check-all-above', onCheckAllAbove);
         curQue.init();
 
         $.get(chrome.extension.getURL('/quiz.template.html'), function(data) {
