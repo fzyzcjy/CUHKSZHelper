@@ -1,6 +1,7 @@
 (function(){
     const ANS_KEY_ARR = ['1','2','3','4','5'];
     const POS_CONTROL_KEY_ARR = ['<','>'];
+    const RECOMMENT_CHECK_CNT = 10;
 
     var QuizStorage = (() => {
         const DEFAULT_OBJ = {
@@ -31,12 +32,17 @@
             $(".mh-que-active").removeClass("mh-que-active");
             $que.addClass("mh-que-active");
 
+            var toCheckCnt = getAvailableCheckElArr().length;
+            var checkAllAboveText =
+                (toCheckCnt>=RECOMMENT_CHECK_CNT?'[RECOMMEND] ':'') +
+                'Check All Above (' + toCheckCnt+' Questions)';
             $("#mh-check-all-above").remove();
             $que.find('.im-controls').append(
                 '<input ' + 
                     'id="mh-check-all-above" ' + 
-                    'value="Check All Above" ' + 
+                    'value="'+checkAllAboveText+'" ' + 
                     'type="button" ' + 
+                    (toCheckCnt>=RECOMMENT_CHECK_CNT?'style="font-weight: bold; color: rgba(111, 19, 106, 0.9)"':'') +
                 '/>');
 
             if(!disableScrollTo) {
@@ -46,6 +52,12 @@
                         scrollTop: $que.offset().top
                     }, 200);
             };
+
+            // about `Next page`
+            // var $nextPageBtn = $("input[name=next][value='Next page']");
+            // var $prevPageBtn = $("input[name=previous][value='Previous page']");
+            // console.log($nextPageBtn, $prevPageBtn);
+
         }
 
         var getQueEl = (queIdx) => {
@@ -114,16 +126,20 @@
         }
     }
 
-    function onCheckAllAbove() {
-        console.log("Check All Above");
-        QuizStorage.save('checkingAllAbove', true);
-        var $needClickCheckArr = $("input.submit.btn[value=Check]").filter((idx, el) => {
+    function getAvailableCheckElArr() {
+        return $("input.submit.btn[value=Check]").filter((idx, el) => {
             var $que = $(el).parents('.que');
             var isAbove = (getIdFromQue($que) <= getIdFromQue(curQue.getQueEl()));
             var isAnswered = ($que.find('.answer input[type=radio]:checked').length > 0);
             return isAbove && isAnswered;
         });
 
+    }
+
+    function onCheckAllAbove() {
+        console.log("Check All Above");
+        QuizStorage.save('checkingAllAbove', true);
+        var $needClickCheckArr = getAvailableCheckElArr();
         $("#mh-hint-checking").show();
         if($needClickCheckArr.length > 0) {
             $("#mh-hint-checking-remain").text($needClickCheckArr.length);
