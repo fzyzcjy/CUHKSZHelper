@@ -27,7 +27,7 @@
 
     var curQue = (() => {
         var renderCurQue = (disableScrollTo) => {
-            var $que = curQue.getQueEl();
+            var $que = curQue.getCurQueEl();
 
             $(".mh-que-active").removeClass("mh-que-active");
             $que.addClass("mh-que-active");
@@ -65,12 +65,16 @@
             return $("#q" + queIdx);
         }
 
-        var move = (step) => {
-            var newQueIdx = QuizStorage.get('curQueIdx') + step;
+        var autoSetIdx = (newQueIdx) => {
             if(getQueEl(newQueIdx).length > 0) {
                 QuizStorage.save('curQueIdx', newQueIdx);
             }
             renderCurQue();
+        }
+
+        var move = (step) => {
+            var newQueIdx = QuizStorage.get('curQueIdx') + step;
+            autoSetIdx(newQueIdx);
         }
 
         var init = () => {
@@ -81,14 +85,20 @@
             next() {
                 move(1);
             },
+            getCurQueEl() {
+                if(getQueEl().length == 0) {
+                    var firstQueInPage = getIdFromQue($(".que:first-child"));
+                    autoSetIdx(firstQueInPage);
+                }
+                return getQueEl(); // get it again
+            },
             move: move,
-            getQueEl: getQueEl,
             init: init,
         }
     })();
 
     function onAnsClick(ansIdx) {
-        var $que = curQue.getQueEl();
+        var $que = curQue.getCurQueEl();
         var $ans = $que.find('input[type=radio][id$=answer'+ansIdx+']');
         $ans.click();
         curQue.next();
@@ -129,7 +139,7 @@
     function getAvailableCheckElArr() {
         return $("input.submit.btn[value=Check]").filter((idx, el) => {
             var $que = $(el).parents('.que');
-            var isAbove = (getIdFromQue($que) <= getIdFromQue(curQue.getQueEl()));
+            var isAbove = (getIdFromQue($que) <= getIdFromQue(curQue.getCurQueEl()));
             var isAnswered = ($que.find('.answer input[type=radio]:checked').length > 0);
             return isAbove && isAnswered;
         });
