@@ -25,6 +25,10 @@
         line-height: 20px;
     }
 
+    #input-max-cnt {
+        width: 32px;
+    }
+
     #output {
         line-height: 32px;
     }
@@ -50,10 +54,13 @@
 
 <div class="container">
     <h2>Essay Sentence Length Checker</h2>
-    <p class="author">Author: Chen Jingyi (WeChat: fzyzcjy, StuId: 117010016)</p><br>
+    <p class="author">Author: Chen Jingyi (WeChat: fzyzcjy, StuId: 117010016)</p>
+    <br>
     <p class="hint-text">Paste your essay here:</p>
     <textarea id="input">I think it's really hard to write short sentences. So I developed this to help you check it. Hope this tool can help you!
-Please paste your essay here. This tool will automatically check whether your sentence is longer than nine words. For example, this sentence consists of 8 words. And this sentence is too long because it has 11 words. The number before it indicates the number of words.</textarea><br><br><br>
+Please paste your essay here. This tool will automatically check whether your sentence is longer than nine words. For example, this sentence consists of 8 words. And this sentence is too long because it has 11 words. The number before it indicates the number of words.</textarea>
+    <p class="hint-text">How many words are you allowed to use at most? <input id="input-max-cnt" type="number" value="9"/></p>
+    <br><br>
     <p class="hint-text">Here is the result:</p>
     <div><p id="output"></p></div>
 </div>
@@ -95,13 +102,11 @@ Please paste your essay here. This tool will automatically check whether your se
 </script>
 
 <script>
-    var WARN_WORD_CNT = 9;
-
-    $("#input").on('keyup', throttle(function(e) {
+    var render = throttle(function(e) {
         var $output = $("#output");
         $output.children().remove();
 
-        var text = $(this).val();
+        var text = $("#input").val();
         var sentenceArr = 
             text.replace(/\./gi, ".*")
                 .replace(/!/gi, "!*")
@@ -110,19 +115,25 @@ Please paste your essay here. This tool will automatically check whether your se
                 .replace(/\n/gi, "\n*")
                 .split(/\*/);
         // console.log(sentenceArr);
+        var warnWordCnt = $("#input-max-cnt").val();
         for(var i = 0;i<sentenceArr.length; ++i) {
             var sen = sentenceArr[i];
             sen = sen.replace('\n', '<br>');
             var wordCnt = sen.trim().split(" ").length;
             var $el = $("<span class='sen'></span>");
-            if(wordCnt > WARN_WORD_CNT) {
+            if(wordCnt > warnWordCnt) {
                 $el.html(' <span class="warn"><b>[' + wordCnt + ']</b> ' + sen + "</span>");
             } else {
                 $el.html(sen);
             }
             $el.appendTo($output);
         }
-    }, 100)).trigger('keyup');
+    }, 100);
+
+    $("#input").on('keyup', render);
+    $("#input-max-cnt").click(render);
+    render();
+
 </script>
 
 </body>
