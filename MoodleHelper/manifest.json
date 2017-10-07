@@ -12,12 +12,17 @@
 				"helper.js",
 				"spider.js",
 				"displayer.js",
-				"quiz.js"
+				"quiz.js",
+				"others.js"
 			],
 			"all_frames": true
 		}
 	],
-	"web_accessible_resources": ["index.template.html", "quiz.template.html"],
+	"web_accessible_resources": [
+		"index.template.html",
+		"quiz.template.html",
+		"ebp_hint.template.html"
+	],
 	"permissions": [
 		"activeTab"
 	]
