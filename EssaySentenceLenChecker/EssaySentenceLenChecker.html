@@ -12,6 +12,10 @@
         font-family: "Helvetica Neue", Helvetica, Microsoft Yahei, Hiragino Sans GB, WenQuanYi Micro Hei, sans-serif !important;
     }
 
+    a, span, textarea, div {
+        word-break: break-all;
+    }
+
     .container {
         width: 80%;
         max-width: 1200px;
@@ -47,22 +51,48 @@
         color: #999;
     }
 
+    .hide-on-mobile {
+        display: none;
+    }
+
+    @media(min-width: 600px) {
+        .show-on-mobile {
+            display: none;
+        }
+        .hide-on-mobile {
+            display: block;
+        }
+    }
+
 </style>
 
 </head>
 <body>
 
 <div class="container">
-    <h2>Essay Sentence Length Checker</h2>
-    <p class="author">Author: Chen Jingyi (WeChat: fzyzcjy, StuId: 117010016)</p>
-    <br>
-    <p class="hint-text">Paste your essay here:</p>
-    <textarea id="input">I think it's really hard to write short sentences. So I developed this to help you check it. Hope this tool can help you!
+    <div>
+        <h2>Essay Sentence Length Checker</h2>
+        <p class="author">Author: Chen Jingyi (WeChat: fzyzcjy, StuId: 117010016)</p>
+        <br>
+    </div>
+    <div class="show-on-mobile">
+        <p>
+            <span>You can also visit it on your computer.</span>
+            <span class="hint-text">
+                Copy this website url 【<a id="cur-url"></a>】, and use WeChat's "File Transfer Helper" to send it to your computer.
+            </span>
+        </p>
+        <br><br>
+    </div>
+    <div>
+        <p class="hint-text">Paste your essay here:</p>
+        <textarea id="input">I think it's really hard to write short sentences. So I developed this to help you check it. Hope this tool can help you!
 Please paste your essay here. This tool will automatically check whether your sentence is longer than nine words. For example, this sentence consists of 8 words. And this sentence is too long because it has 11 words. The number before it indicates the number of words.</textarea>
-    <p class="hint-text">How many words are you allowed to use at most? <input id="input-max-cnt" type="number" value="9"/></p>
-    <br><br>
-    <p class="hint-text">Here is the result:</p>
-    <div><p id="output"></p></div>
+        <p class="hint-text">How many words are you allowed to use at most? <input id="input-max-cnt" type="number" value="9"/></p>
+        <br><br>
+        <p class="hint-text">Here is the result:</p>
+        <div><p id="output"></p></div>
+    </div>
 </div>
 
 <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
@@ -130,9 +160,15 @@ Please paste your essay here. This tool will automatically check whether your se
         }
     }, 100);
 
-    $("#input").on('keyup', render);
-    $("#input-max-cnt").click(render);
-    render();
+    $(function() {
+        $("#input").on('keyup', render);
+        $("#input-max-cnt").click(render);
+        render();
+
+        $("#cur-url")
+            .text(location.href)
+            .attr('href', location.href);
+    });
 
 </script>
 
