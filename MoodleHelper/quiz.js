@@ -181,7 +181,7 @@
         $("body").on('click', '.mh-check-all-above', onCheckAllAbove);
         curQue.init();
 
-        $.get(chrome.extension.getURL('/quiz.template.html'), function(data) {
+        $.get(getURL('quiz.template.html'), function(data) {
             $(data).prependTo('#region-main div[role=main] form>div');
             onInjectedDOMReady();
         });

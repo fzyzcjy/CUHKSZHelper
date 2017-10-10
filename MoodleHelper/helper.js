@@ -52,22 +52,22 @@ var StorageHelper = (function(){
     }
 })();
 
-function isAtRootPage() {
+window.isAtRootPage = function() {
     var path = location.pathname;
     return path == '' || path == '/' || path.startsWith('/index.php');
 }
 
-function showGrp(grp) {
+window.showGrp = function(grp) {
     $(".grp").hide();
     $(".grp-" + grp).show();
 }
 
-function log() {
+window.log = function() {
     var prefix = location.pathname + location.search;
     console.log('['+prefix+']', ...arguments);
 }
 
-function inIframe () {
+window.inIframe = function() {
     try {
         return window.self !== window.top;
     } catch (e) {
@@ -87,3 +87,13 @@ Array.prototype.unique = function() {
 
     return a;
 };
+
+window.getURL = function(src) {
+    if(typeof(chrome)!=='undefined') {
+        return chrome.extension.getURL('/'+src);
+    } else if(typeof(safari)!=='undefined') {
+        return safari.extension.baseURI + src;
+    } else {
+        throw new Exception('No available env');
+    }
+}

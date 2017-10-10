@@ -109,7 +109,7 @@ function renderDisplay() {
 function bootDisplayer() {
     if(inIframe()) return;
     if(isAtRootPage()) {
-        $.get(chrome.extension.getURL('/index.template.html'), function(data) {
+        $.get(getURL('index.template.html'), function(data) {
             $(data).prependTo('#frontpage-course-list');
             onInjectedDOMReady();
         });
