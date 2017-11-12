@@ -1,0 +1,12 @@
+body.css-modify {
+    min-width: 0px !important;
+}
+
+.css-modify .container {
+    margin: 0 !important;
+}
+
+/* should be full height when no headers */
+.css-modify #pad-view-inner, .css-modify #doc-view {
+    height: 100% !important;
+}
