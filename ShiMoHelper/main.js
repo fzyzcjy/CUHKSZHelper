@@ -33,13 +33,23 @@ function onKeyDown(e) {
         case 'F1': setTextCfg(true, true); break;
         case 'F2': setTextCfg(false, true); break;
         case 'F3': setTextCfg(false, false); break;
-        case 'F10': toggleDisplay('#header-wrap'); break;
-        case 'F11': toggleDisplay('#edit-heading'); break;
-        case 'F12': $('body').toggleClass('css-modify'); break;
         default: succeed = false; break;
         }
     } else if(!e.ctrlKey && e.shiftKey) {
         switch(e.key) {
+        case 'F11': toggleDisplay('#edit-heading'); break;
+        case 'F12':
+            toggleDisplay('#header-wrap');
+            $('body').toggleClass('css-modify');
+            break;
+        default: succeed = false; break;
+        }
+    } else if(!e.ctrlKey && !e.shiftKey) {
+        switch(e.key) {
+        case 'F2': 
+            setBold(false);
+            setColor(42);
+            break;
         default: succeed = false; break;
         }
     } else {
@@ -48,17 +58,24 @@ function onKeyDown(e) {
     if(succeed) console.log("Action", e.key);
 }
 
-function injectDOM() {
-    if($(".fixed-box").length == 0) {
-        setTimeout(injectDOM, 500);
-    } else {
-        $(".fixed-box").hide();
-        console.log("ShiMo Helper InjectedDOM");
+function executeUntilSucceed(f, timeout) {
+    if(!f()) {
+        setTimeout(() => {executeUntilSucceed(f);}, timeout || 500);
     }
 }
 
-console.log("ShiMo Helper Loading");
-$(()=>{
-    injectDOM();
-    $("body").keydown(onKeyDown);
+console.log("ShiMo Helper :)");
+
+executeUntilSucceed(() => {
+    $(".fixed-box").hide();
+    return $(".fixed-box").length > 0;
+});
+
+executeUntilSucceed(() => {
+    if($("#pad-view").length > 0) {
+        $("body").keydown(onKeyDown);
+        return true;
+    } else {
+        return false;
+    }
 });

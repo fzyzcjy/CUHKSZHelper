@@ -1,4 +1,4 @@
-F2::
+F10::
     Send ^{PgUp}
     Send ^R
     Send ^{PgDn}

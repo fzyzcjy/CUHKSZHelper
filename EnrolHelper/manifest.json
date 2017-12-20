@@ -1,0 +1,27 @@
+﻿{
+	"manifest_version": 2,
+	"name": "Enrol Helper",
+	"author": "CJY@CUHKSZ",
+	"version": "0.1.0",
+	"content_scripts": [
+		{
+			"matches": ["http://116.31.95.2:81/**"],
+			"css": ["style.css"],
+			"js": [
+				"jquery.min.js",
+				"mousetrap.js",
+				"tmpl.js",
+				"main.js"
+			],
+			"all_frames": true,
+			"run_at": "document_start"
+		}
+	],
+	"web_accessible_resources": [
+		"float.template.html",
+		"inject.template.html"
+	],
+	"permissions": [
+		"activeTab"
+	]
+}
