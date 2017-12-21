@@ -19,7 +19,8 @@
 	],
 	"web_accessible_resources": [
 		"float.template.html",
-		"inject.template.html"
+		"inject.template.html",
+		"search_subject.template.html"
 	],
 	"permissions": [
 		"activeTab"

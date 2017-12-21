@@ -29,3 +29,24 @@ body.hide-focus-hint #focus-hint {
 body:not(.hide-focus-hint) .float-action, body:not(.hide-focus-hint) .highlight {
     opacity: 0.5;
 }
+
+.row .col {
+    float: left;
+}
+
+.row:before, .row:after {
+    content: " ";
+    display: table;
+}
+
+.row:after {
+    clear: both;
+}
+
+.subject {
+    display: block;
+    position: initial;
+    margin: 8px;
+    width: 36px;
+    padding: 8px 12px;
+}

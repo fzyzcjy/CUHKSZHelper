@@ -51,32 +51,37 @@ function createHotKey(data) {
 
     console.log(data.name, "OK");
 
-    var parentPosRect = $parent[0].getBoundingClientRect();
-    var $html = $(tmpl(floatHtmlTemplate, data));
+    if(data.mode == 'raw') {
+        data.render();
+    } else {
+        var bodyRect = document.body.getBoundingClientRect();
+        var parentPosRect = $parent[0].getBoundingClientRect();
+        var $html = $(tmpl(floatHtmlTemplate, data));
 
-    switch(data.mode) {
-    case 'highlight':
-        $parent.addClass('highlight');
-        $html.css({
-            'left': parentPosRect.left,
-            'top': parentPosRect.top + parentPosRect.height + 3
-        });
-        break;
-    case 'global':
-        $html.css({
-            'left': 16,
-            'top': globalCnt * 40 + 16,
-        });
-        globalCnt++;
-        break;
+        switch(data.mode) {
+        case 'highlight':
+            $parent.addClass('highlight');
+            $html.css({
+                'left': parentPosRect.left - bodyRect.left,
+                'top': parentPosRect.top - bodyRect.top + parentPosRect.height + 3
+            });
+            break;
+        case 'global':
+            $html.css({
+                'left': 16,
+                'top': globalCnt * 40 + 16,
+            });
+            globalCnt++;
+            break;
+        }
+
+        $html.click(data.onTrigger);
+        $("body").append($html);
+
+        Mousetrap.bind(data.hotKey, data.onTrigger);
+
+        activeHotKeyHandler[data.hotKey] = data.onTrigger;
     }
-
-    $html.click(data.onTrigger);
-    $("body").append($html);
-
-    Mousetrap.bind(data.hotKey, data.onTrigger);
-
-    activeHotKeyHandler[data.hotKey] = data.onTrigger;
 }
 
 function createAllHotKey() {
@@ -164,10 +169,38 @@ hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
         }, 500);
     }
 }));
-hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
+// hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
+//     name: 'SearchStep2',
+//     bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH'
+// }));
+hotKeyDataArr.push({
     name: 'SearchStep2',
-    bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH'
-}));
+    mode: 'raw',
+    isActive() {
+        return $('#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH').length > 0;
+    },
+    render() {
+        $.get(getURL('search_subject.template.html'), function(template) {
+            var data = {
+                subjectArr: 
+                    $.map($("#SSR_CLSRCH_WRK_SUBJECT\\$0 option"), op => op.value)
+                        .filter(x => x)
+            };
+            console.log($("#SSR_CLSRCH_WRK_SUBJECT\\$0 option"), data);
+            var $html = $(tmpl(template, data));
+            $("body #win0divDERIVED_CLSRCH_GROUP2").parent().prepend($html);
+            $html.on('click', '.subject', function() {
+                var $this = $(this);
+                var subject = $this.data('subject');
+                $("#SSR_CLSRCH_WRK_SUBJECT\\$0")[0].value = subject;
+                setTimeout(() => {
+                    $("#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH").advancedClick();
+                }, 0);
+            });
+        });
+    }
+})
+//TODO $("a[id*=viewall]").advancedClick()
 
 function registerEvents() {
     $("body").click(() => {
@@ -176,9 +209,11 @@ function registerEvents() {
 }
 
 function boot() {
+
     $.get(getURL('inject.template.html'), function(data) {
         $("body").append(data);
     });
+
     $.get(getURL('float.template.html'), function(data) {
         console.log("Boot");
         floatHtmlTemplate = data;
@@ -189,6 +224,7 @@ function boot() {
             registerEvents();
         }
     });
+
 }
 
 function reboot() {
@@ -197,7 +233,7 @@ function reboot() {
     globalCnt = 0;
     activeHotKeyHandler = {};
     // clear html
-    $('.float-action').remove();
+    $('.injected-dom').remove();
     $('.highlight').removeClass('highlight');
     // reset mousetrap
     if(inIframe()) {
