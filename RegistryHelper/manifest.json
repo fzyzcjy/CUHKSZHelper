@@ -1,6 +1,6 @@
 ﻿{
 	"manifest_version": 2,
-	"name": "Enrol Helper",
+	"name": "Registry Helper",
 	"author": "CJY@CUHKSZ",
 	"version": "0.1.0",
 	"content_scripts": [
