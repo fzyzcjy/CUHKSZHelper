@@ -227,6 +227,9 @@ function boot() {
             changeFocus();
             $.get(getURL('inject.template.html'), function(data) {
                 $("body").append(data);
+                $(".refresh-page").click(() => {
+                    location.reload();
+                });
             });
         } else {
             console.log("Assistant frame mode");

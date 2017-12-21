@@ -1,6 +1,6 @@
 .float-action, #focus-hint {
     position: absolute;
-    background: #FF9800;
+    background: #4CAF50;
     color: white;
     padding: 4px 8px;
     border-radius: 2px;
@@ -41,4 +41,9 @@
     margin: 8px;
     width: 36px;
     padding: 8px 12px;
+}
+
+.refresh-page {
+    right: 0;
+    top: 0;
 }
