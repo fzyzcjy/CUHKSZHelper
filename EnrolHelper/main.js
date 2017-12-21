@@ -386,3 +386,7 @@ hotKeyDataArr.push((function() {
         },
     };
 })());
+hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
+    name: 'GoBackToSearchResults',
+    bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_BACK'
+}));
