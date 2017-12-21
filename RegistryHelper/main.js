@@ -98,14 +98,23 @@ function throttle(func, wait, options) {
         return result;
     };
 };
+console.realLog = console.log;
+console.log = function() {
+    var prefix = (isMainFrameMode()?'M':'A');
+    console.realLog('['+prefix+']', ...arguments);
+}
 
 var IFRAME_SELECTOR = "iframe#ptifrmtgtframe";
 var floatHtmlTemplate = '';
+
 var hotKeyDataArr = [];
+var taskSeqDataMap = {};
 
 var globalCnt = 0;
 var activeHotKeyHandler = {};
 function createHotKey(data) {
+    var status = true;
+
     if(typeof(data.onTrigger) == 'string' && data.onTrigger == 'click') {
         data.onTrigger = () => {
             var $el = $(data.bindSelector);
@@ -113,18 +122,22 @@ function createHotKey(data) {
         };
     }
 
-    if(data.isActive && !data.isActive()) {
-        // console.log(data.name, "Not Active");
-        return;
-    }
-
     var $parent = $(data.bindSelector || 'body');
-    if($parent.length == 0) {
-        // console.log(data.name, "Ele not found");
-        return;
+
+    if(data.isActive && !data.isActive()) {
+        status = 'Not active';
+    } else if($parent.length == 0) {
+        status = "Ele not found";
+    } else if (!isFrameSuitable(data.frame)) {
+        status = "Mode not suitable";
     }
 
-    // console.log(data.name, "OK");
+    if(status !== true) {
+        // console.log('LoadHotKey', data.name, '- ' + status);
+        return;
+    } else {
+        // console.log('LoadHotKey', data.name, "- OK");
+    }
 
     if(data.mode == 'raw') {
         data.render();
@@ -154,7 +167,9 @@ function createHotKey(data) {
         $html.click(data.onTrigger);
         $("body").append($html);
 
-        Mousetrap.bind(data.hotKey, data.onTrigger);
+        if(data.hotKey) {
+            Mousetrap.bind(data.hotKey, data.onTrigger);
+        }
 
         activeHotKeyHandler[data.hotKey] = data.onTrigger;
     }
@@ -195,6 +210,16 @@ function registerHotKeyPassToIframe() {
 
 function isMainFrameMode() {
     return $(IFRAME_SELECTOR).length == 0 || inIframe();
+}
+
+function isFrameSuitable(needFrame) {
+    var isMain = isMainFrameMode();
+    switch(needFrame || 'main') {
+    case 'main': return isMain;
+    case 'assistant': return !isMain;
+    case 'all': return true;
+    default: throw new Exception('');
+    }
 }
 
 var onPageChange = throttle(function(){
@@ -238,10 +263,12 @@ function boot() {
     $.get(getURL('float.template.html'), function(data) {
         console.log("Boot");
         floatHtmlTemplate = data;
+        createAllHotKey();
         if(isMainFrameMode()) {
             console.log("Main frame mode");
-            createAllHotKey();
             changeFocus();
+            autoContinueSequence();
+
             registerEvents();
             $.get(getURL('inject.template.html'), function(data) {
                 $("body").append(data);
@@ -249,6 +276,7 @@ function boot() {
                     location.reload();
                 });
             });
+
         } else {
             console.log("Assistant frame mode");
             registerHotKeyPassToIframe();
@@ -265,14 +293,64 @@ function reboot() {
     $('.injected-dom:not(.preserve)').remove();
     $('.highlight').removeClass('highlight');
 
+    Mousetrap.reset();
+    createAllHotKey();
     if(isMainFrameMode()) {
-        Mousetrap.reset();
-        createAllHotKey();
         changeFocus();
+        autoContinueSequence();
+    } else {
+        registerHotKeyPassToIframe();
     }
 }
 
 $(boot);
+
+// sequence
+
+var KEY_SEQ_NAME = 'SeqName';
+var KEY_SEQ_STAGE = 'SeqStage';
+
+function startSequence(seqName) {
+    localStorage[KEY_SEQ_NAME] = seqName;
+    localStorage[KEY_SEQ_STAGE] = '0';
+    autoContinueSequence();
+}
+
+function autoContinueSequence() {
+    var seqName = localStorage[KEY_SEQ_NAME];
+    var seqStage = parseInt(localStorage[KEY_SEQ_STAGE]);
+    if(!seqName) {
+        return;
+    }
+    
+    var taskSeq = taskSeqDataMap[seqName];
+    var taskData = taskSeq[seqStage];
+
+    if(!isFrameSuitable(taskData.frame)) {
+        return;
+    }
+
+    console.log('RunningSeq', seqName, seqStage);
+
+    nextStage = seqStage + 1;
+    if(nextStage >= taskSeq.length) {
+        localStorage.removeItem(KEY_SEQ_NAME);
+    } else {
+        localStorage[KEY_SEQ_STAGE] = '' + nextStage;
+    }
+
+    showCenteredHint('Executing task: ' + seqName);
+
+    taskData.execute();
+}
+
+function showCenteredHint(text) {
+    var $html = $(tmpl(floatHtmlTemplate, {
+        text: text
+    }));
+    $html.addClass('center-up');
+    $("body").append($html);
+}
 
 // data
 
@@ -375,11 +453,7 @@ hotKeyDataArr.push((function() {
         render() {
             if(getElArr().length>0) {
                 // hint
-                var $html = $(tmpl(floatHtmlTemplate, {
-                    text: 'Viewing All Sections...'
-                }));
-                $html.addClass('center-up');
-                $("body").append($html);
+                showCenteredHint('Viewing all sections...');
                 // click
                 $(getElArr()[0]).advancedClick();
             }
@@ -390,3 +464,29 @@ hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
     name: 'GoBackToSearchResults',
     bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_BACK'
 }));
+hotKeyDataArr.push({
+    name: "GoToSearchCourse",
+    text: 'Go to Search Course',
+    frame: 'assistant',
+    mode: 'global',
+    isActive() {
+        return true; //TODO:
+    },
+    onTrigger() {
+        startSequence('GoToSearchCourse');
+    },
+});
+taskSeqDataMap['GoToSearchCourse'] = [
+    {
+        frame: 'assistant',
+        execute() {
+            location.href = 'http://116.31.95.2:81/psp/csprd/EMPLOYEE/HRMS/s/WEBLIB_PTPP_SC.HOMEPAGE.FieldFormula.IScript_AppHP?pt_fname=HCCC_ENROLLMENT&FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT&IsFolder=true';
+        },
+    },
+    {
+        frame: 'main',
+        execute() {
+            location.href = 'http://116.31.95.2:81/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.CLASS_SEARCH.GBL?Page=SSR_CLSRCH_ENTRY';
+        },
+    },
+];
