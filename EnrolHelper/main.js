@@ -25,9 +25,81 @@ $.fn.extend({
         }
     }
 });
+// https://stackoverflow.com/questions/5202296/add-a-hook-to-all-ajax-requests-on-a-page
+window.addXMLRequestCallback = function(callback){
+    var oldSend, i;
+    if( XMLHttpRequest.callbacks ) {
+        // we've already overridden send() so just add the callback
+        XMLHttpRequest.callbacks.push( callback );
+    } else {
+        // create a callback queue
+        XMLHttpRequest.callbacks = [callback];
+        // store the native send()
+        oldSend = XMLHttpRequest.prototype.send;
+        // override the native send()
+        XMLHttpRequest.prototype.send = function(){
+            // process the callback queue
+            // the xhr instance is passed into each callback but seems pretty useless
+            // you can't tell what its destination is or call abort() without an error
+            // so only really good for logging that a request has happened
+            // I could be wrong, I hope so...
+            // EDIT: I suppose you could override the onreadystatechange handler though
+            for( i = 0; i < XMLHttpRequest.callbacks.length; i++ ) {
+                XMLHttpRequest.callbacks[i]( this );
+            }
+            // call the native send()
+            oldSend.apply(this, arguments);
+        }
+    }
+}
+// https://stackoverflow.com/questions/3219758/detect-changes-in-the-dom
+var observeDOM = (function(){
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver,
+        eventListenerSupported = window.addEventListener;
+
+    return function(obj, callback){
+        // define a new observer
+        var obs = new MutationObserver(function(mutations, observer){
+            if( mutations[0].addedNodes.length || mutations[0].removedNodes.length )
+                callback(mutations);
+        });
+        // have the observer observe foo for changes in children
+        obs.observe( obj, { childList:true, subtree:true });
+    };
+})();
+function throttle(func, wait, options) {
+    var context, args, result;
+    var timeout = null;
+    var previous = 0;
+    if (!options) options = {};
+    var later = function () {
+        previous = options.leading === false ? 0 : Date.now();
+        timeout = null;
+        result = func.apply(context, args);
+        if (!timeout) context = args = null;
+    };
+    return function () {
+        var now = Date.now();
+        if (!previous && options.leading === false) previous = now;
+        var remaining = wait - (now - previous);
+        context = this;
+        args = arguments;
+        if (remaining <= 0 || remaining > wait) {
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            previous = now;
+            result = func.apply(context, args);
+            if (!timeout) context = args = null;
+        } else if (!timeout && options.trailing !== false) {
+            timeout = setTimeout(later, remaining);
+        }
+        return result;
+    };
+};
 
 var IFRAME_SELECTOR = "iframe#ptifrmtgtframe";
-
 var floatHtmlTemplate = '';
 
 var globalCnt = 0;
@@ -41,17 +113,17 @@ function createHotKey(data) {
     }
 
     if(data.isActive && !data.isActive()) {
-        console.log(data.name, "Not Active");
+        // console.log(data.name, "Not Active");
         return;
     }
 
     var $parent = $(data.bindSelector || 'body');
     if($parent.length == 0) {
-        console.log(data.name, "Ele not found");
+        // console.log(data.name, "Ele not found");
         return;
     }
 
-    console.log(data.name, "OK");
+    // console.log(data.name, "OK");
 
     if(data.mode == 'raw') {
         data.render();
@@ -167,12 +239,12 @@ hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
     bindSelector: '#DERIVED_REGFRM1_SSR_PB_SRCH',
     onTrigger() {
         $('#DERIVED_REGFRM1_SSR_PB_SRCH').advancedClick();
-        var iId = setInterval(() => {
-            if($('.PSGROUPBOXLABEL').text() == "Search for Classes") {
-                clearInterval(iId);
-                reboot();
-            }
-        }, 500);
+        // var iId = setInterval(() => {
+        //     if($('.PSGROUPBOXLABEL').text() == "Search for Classes") {
+        //         clearInterval(iId);
+        //         reboot();
+        //     }
+        // }, 500);
     }
 }));
 // hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
@@ -211,6 +283,37 @@ function isMainFrameMode() {
     return $(IFRAME_SELECTOR).length == 0 || inIframe();
 }
 
+var onPageChange = throttle(function(){
+    console.log("Page changed");
+    reboot();
+}, 500);
+
+function registerEvents() {
+    // document.body.addEventListener('click', function() {
+    //     console.log(event.target);
+    //     if(!$(event.target).hasClass('injected-dom')) {
+    //         onPageChange();
+    //     }
+    // }, true);
+    // addXMLRequestCallback(onPageChange);
+    observeDOM($("body")[0], function(mutation){ 
+        // console.log(mutation);
+        var injectedBySelf = true;
+        for(var i = 0;i<mutation.length; ++i) {
+            var addedNodes = Array.from(mutation[i].addedNodes);
+            injectedBySelf =
+                addedNodes.length == 0 ||
+                addedNodes.every(node => $(node).hasClass('injected-dom'));
+            if(!injectedBySelf) {
+                break;
+            }
+        }
+        if(!injectedBySelf) {
+            onPageChange();
+        }
+    });
+}
+
 function changeFocus() {
     setTimeout(() => {
         $("body").focus();
@@ -225,6 +328,7 @@ function boot() {
             console.log("Main frame mode");
             createAllHotKey();
             changeFocus();
+            registerEvents();
             $.get(getURL('inject.template.html'), function(data) {
                 $("body").append(data);
                 $(".refresh-page").click(() => {
@@ -244,7 +348,7 @@ function reboot() {
     globalCnt = 0;
     activeHotKeyHandler = {};
     // clear html
-    $('.injected-dom').remove();
+    $('.injected-dom:not(.preserve)').remove();
     $('.highlight').removeClass('highlight');
 
     if(isMainFrameMode()) {
