@@ -109,6 +109,7 @@ var floatHtmlTemplate = '';
 
 var hotKeyDataArr = [];
 var taskSeqDataMap = {};
+var settingDataArr = [];
 
 var globalCnt = 0;
 var activeHotKeyHandler = {};
@@ -124,12 +125,12 @@ function createHotKey(data) {
 
     var $parent = $(data.bindSelector || 'body');
 
-    if(data.isActive && !data.isActive()) {
+    if (!isFrameSuitable(data.frame)) {
+        status = "Mode not suitable";
+    } else if(data.isActive && !data.isActive()) {
         status = 'Not active';
     } else if($parent.length == 0) {
         status = "Ele not found";
-    } else if (!isFrameSuitable(data.frame)) {
-        status = "Mode not suitable";
     }
 
     if(status !== true) {
@@ -137,6 +138,11 @@ function createHotKey(data) {
         return;
     } else {
         // console.log('LoadHotKey', data.name, "- OK");
+    }
+
+    if(data.autoSetting && readSetting(data.autoSetting) == true) {
+        console.log(data.name, 'Auto Trigger by Setting');
+        data.onTrigger('auto');
     }
 
     if(data.mode == 'raw') {
@@ -214,10 +220,13 @@ function isMainFrameMode() {
 
 function isFrameSuitable(needFrame) {
     var isMain = isMainFrameMode();
+    var isFrame = inIframe();
     switch(needFrame || 'main') {
     case 'main': return isMain;
     case 'assistant': return !isMain;
     case 'all': return true;
+    case 'not_iframe': return !inIframe();
+    case 'iframe': return inIframe();
     default: throw new Exception('');
     }
 }
@@ -259,6 +268,18 @@ function changeFocus() {
     }, 0);
 }
 
+function injectPersistentDOM() {
+    $.get(getURL('inject.template.html'), function(data) {
+        $("body").append(data);
+        $(".refresh-page").click(() => {
+            location.reload();
+        });
+        $(".open-setting").click(() => {
+            openSetting();
+        });
+    });
+}
+
 function boot() {
     $.get(getURL('float.template.html'), function(data) {
         console.log("Boot");
@@ -270,12 +291,7 @@ function boot() {
             autoContinueSequence();
 
             registerEvents();
-            $.get(getURL('inject.template.html'), function(data) {
-                $("body").append(data);
-                $(".refresh-page").click(() => {
-                    location.reload();
-                });
-            });
+            injectPersistentDOM();
 
         } else {
             console.log("Assistant frame mode");
@@ -311,8 +327,12 @@ var KEY_SEQ_NAME = 'SeqName';
 var KEY_SEQ_STAGE = 'SeqStage';
 
 function startSequence(seqName) {
+    if(localStorage[KEY_SEQ_NAME]) {
+        return;
+    }
     localStorage[KEY_SEQ_NAME] = seqName;
     localStorage[KEY_SEQ_STAGE] = '0';
+    console.log("Start Sequence", seqName);
     autoContinueSequence();
 }
 
@@ -350,6 +370,41 @@ function showCenteredHint(text) {
     }));
     $html.addClass('center-up');
     $("body").append($html);
+}
+
+// setting
+
+var KEY_SETTING = 'MainSetting';
+
+function openSetting() {
+    var settings = QuickSettings.create(0, 0, "Settings", document.body);
+    for(var i = 0;i<settingDataArr.length; ++i) {
+        var d = settingDataArr[i];
+        switch(d.type) {
+        case 'checkbox':
+            settings.addBoolean(d.text, d.defValue, ()=>{});
+            break;
+        default:
+            throw new Exception();
+        }
+    }
+    var width = 384;
+    var left = ($(document).width() - width) / 2;
+    settings.setWidth(width);
+    settings.setPosition(left, 96);
+    settings.addButton('Close', () => {
+        settings.destroy();
+        reboot();
+    });
+    settings.saveInLocalStorage(KEY_SETTING);
+}
+
+function readSetting(name) {
+    var setting = settingDataArr.find(setting => setting.name == name);
+    var key = setting.text;
+    var data = localStorage[KEY_SETTING] || '{}';
+    var ans = JSON.parse(data)[key];
+    return (ans===undefined) ? setting.defValue : ans;
 }
 
 // data
@@ -413,11 +468,12 @@ hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
 //     name: 'SearchStep2',
 //     bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH'
 // }));
+var SELECTOR_SEARCH_COURSE_PAGE = '#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH'
 hotKeyDataArr.push({
     name: 'SearchStep2',
     mode: 'raw',
     isActive() {
-        return $('#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH').length > 0;
+        return $(SELECTOR_SEARCH_COURSE_PAGE).length > 0;
     },
     render() {
         $.get(getURL('search_subject.template.html'), function(template) {
@@ -464,29 +520,55 @@ hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
     name: 'GoBackToSearchResults',
     bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_BACK'
 }));
+var SEARCH_COURSE_URL = 'http://116.31.95.2:81/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.CLASS_SEARCH.GBL?Page=SSR_CLSRCH_ENTRY';
 hotKeyDataArr.push({
     name: "GoToSearchCourse",
     text: 'Go to Search Course',
-    frame: 'assistant',
+    frame: 'not_iframe',
     mode: 'global',
+    autoSetting: 'AutoGoSearchPage',
     isActive() {
-        return true; //TODO:
+        var iframe = $(IFRAME_SELECTOR)[0];
+        // console.log(iframe.contentWindow.document);
+        return !iframe || ($(iframe.contentWindow.document).find(SELECTOR_SEARCH_COURSE_PAGE).length == 0)
     },
-    onTrigger() {
-        startSequence('GoToSearchCourse');
+    onTrigger(mode) {
+        if(mode!='auto' || location.href.indexOf('STUDENT_HOMEPAGE')!=-1) {
+            console.log(mode, location.href);
+            startSequence('GoToSearchCourse');
+        }
     },
 });
 taskSeqDataMap['GoToSearchCourse'] = [
     {
-        frame: 'assistant',
+        frame: 'not_iframe',
         execute() {
             location.href = 'http://116.31.95.2:81/psp/csprd/EMPLOYEE/HRMS/s/WEBLIB_PTPP_SC.HOMEPAGE.FieldFormula.IScript_AppHP?pt_fname=HCCC_ENROLLMENT&FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT&IsFolder=true';
         },
     },
     {
-        frame: 'main',
+        frame: 'iframe',
         execute() {
-            location.href = 'http://116.31.95.2:81/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.CLASS_SEARCH.GBL?Page=SSR_CLSRCH_ENTRY';
+            location.href = SEARCH_COURSE_URL;
         },
     },
 ];
+
+settingDataArr.push({
+    name: 'AutoEngVersion',
+    text: 'Switch to English version automatically',
+    type: 'checkbox',
+    defValue: true,
+});
+settingDataArr.push({
+    name: 'AutoGoSearchPage',
+    text: 'Go to course searching page after signing in',
+    type: 'checkbox',
+    defValue: true,
+});
+settingDataArr.push({
+    name: 'AutoExpandCourse',
+    text: 'Expand all courses automatically',
+    type: 'checkbox',
+    defValue: true,
+});
