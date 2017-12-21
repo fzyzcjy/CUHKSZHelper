@@ -1,5 +1,12 @@
 <div id="search-subject" class="injected-dom row">
+    <div class="hint-text">
+        <b>Hint: Move your mouse over the subjects to see the full name of them.</b>
+    </div>
     {% for (var i=0; i<o.subjectArr.length; i++) { %}
-        <div class="col float-action subject" data-subject="{%=o.subjectArr[i]%}">{%=o.subjectArr[i]%}</div>
+        <div
+            class="col float-action subject"
+            data-subject="{%=o.subjectArr[i].abbr%}"
+            title="{%=o.subjectArr[i].hint%}"
+        >{%=o.subjectArr[i].abbr%}</div>
     {% } %}
 </div>

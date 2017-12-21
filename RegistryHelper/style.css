@@ -40,9 +40,10 @@
 .subject {
     display: block;
     position: initial;
-    margin: 8px;
+    margin: 4px 4px;
     width: 36px;
     padding: 8px 12px;
+    text-align: center;
 }
 
 .refresh-page, .open-setting {
@@ -67,4 +68,9 @@
 
 .qs_checkbox_label {
     top: 3px !important;
+}
+
+.hint-text {
+    color: #4CAF50;
+    padding: 8px 0px 0px 4px;
 }

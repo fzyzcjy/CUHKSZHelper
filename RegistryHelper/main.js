@@ -485,9 +485,15 @@ hotKeyDataArr.push({
         $.get(getURL('search_subject.template.html'), function(template) {
             var data = {
                 subjectArr: 
-                    $.map($("#SSR_CLSRCH_WRK_SUBJECT\\$0 option"), op => op.value)
-                        .filter(x => x)
+                    $.map($("#SSR_CLSRCH_WRK_SUBJECT\\$0 option"), (op) => {
+                        return {
+                            abbr: op.value,
+                            hint: $(op).text(),
+                        };
+                    })
+                    .filter(item => item.abbr),
             };
+            console.log(data);
             var $html = $(tmpl(template, data));
             $("body #win0divDERIVED_CLSRCH_GROUP2").parent().prepend($html);
             $html.on('click', '.subject', function() {
