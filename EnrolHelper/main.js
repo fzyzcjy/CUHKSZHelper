@@ -101,6 +101,7 @@ function throttle(func, wait, options) {
 
 var IFRAME_SELECTOR = "iframe#ptifrmtgtframe";
 var floatHtmlTemplate = '';
+var hotKeyDataArr = [];
 
 var globalCnt = 0;
 var activeHotKeyHandler = {};
@@ -144,6 +145,7 @@ function createHotKey(data) {
             $html.css({
                 'left': 16,
                 'top': globalCnt * 40 + 16,
+                'position': 'fixed',
             });
             globalCnt++;
             break;
@@ -190,94 +192,6 @@ function registerHotKeyPassToIframe() {
         })() );
     }
 }
-
-var HIGHLIGHT_TEMPLATE = {
-    text: '',
-    hotKey: 'f2',
-    mode: 'highlight',
-    onTrigger: 'click',
-};
-
-var hotKeyDataArr = [];
-hotKeyDataArr.push({
-    name: "EnglishVersion",
-    text: 'Eng Version',
-    hotKey: 'f4',
-    mode: 'global',
-    isActive() {
-        return $("#ptLabelUserid label").length > 0 && $("#ptLabelUserid label").text() != 'User ID';
-    },
-    onTrigger() {
-        location.href = 'http://116.31.95.2:81/psp/csprd/EMPLOYEE/HRMS/?&cmd=login&languageCd=ENG';
-    },
-});
-// hotKeyDataArr.push({
-//     name: 'OptimizedMode',
-//     text: 'Go into Optimized Mode',
-//     hotKey: 'f4',
-//     mode: 'global',
-//     isActive() {
-//         return $("iframe#ptifrmtgtframe").length > 0
-//             || location.href.indexOf('STUDENT_HOMEPAGE') != -1;
-//     },
-//     onTrigger() {
-//         var go = '';
-//         if($("iframe#ptifrmtgtframe").length > 0) {
-//             go = $("iframe#ptifrmtgtframe")[0].contentDocument.location.href;
-//         } else {
-//             go = 'http://116.31.95.2:81/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_CART.GBL?FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT.HC_SSR_SSENRL_CART_GBL&IsFolder=false&IgnoreParamTempl=FolderPath%2cIsFolder';
-//         }
-//         location.href = go;
-//     }
-// });
-hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
-    name: 'Login',
-    bindSelector: '.ps_signinentry input[type=submit]'
-}));
-hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
-    name: 'StartSearch',
-    bindSelector: '#DERIVED_REGFRM1_SSR_PB_SRCH',
-    onTrigger() {
-        $('#DERIVED_REGFRM1_SSR_PB_SRCH').advancedClick();
-        // var iId = setInterval(() => {
-        //     if($('.PSGROUPBOXLABEL').text() == "Search for Classes") {
-        //         clearInterval(iId);
-        //         reboot();
-        //     }
-        // }, 500);
-    }
-}));
-// hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
-//     name: 'SearchStep2',
-//     bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH'
-// }));
-hotKeyDataArr.push({
-    name: 'SearchStep2',
-    mode: 'raw',
-    isActive() {
-        return $('#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH').length > 0;
-    },
-    render() {
-        $.get(getURL('search_subject.template.html'), function(template) {
-            var data = {
-                subjectArr: 
-                    $.map($("#SSR_CLSRCH_WRK_SUBJECT\\$0 option"), op => op.value)
-                        .filter(x => x)
-            };
-            var $html = $(tmpl(template, data));
-            $("body #win0divDERIVED_CLSRCH_GROUP2").parent().prepend($html);
-            $html.on('click', '.subject', function() {
-                var $this = $(this);
-                var subject = $this.data('subject');
-                $("#SSR_CLSRCH_WRK_SUBJECT\\$0")[0].value = subject;
-                setTimeout(() => {
-                    $("#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH").advancedClick();
-                }, 0);
-            });
-        });
-    }
-})
-//TODO $("a[id*=viewall]").advancedClick()
 
 function isMainFrameMode() {
     return $(IFRAME_SELECTOR).length == 0 || inIframe();
@@ -359,3 +273,116 @@ function reboot() {
 }
 
 $(boot);
+
+// data
+
+var HIGHLIGHT_TEMPLATE = {
+    text: '',
+    hotKey: 'f2',
+    mode: 'highlight',
+    onTrigger: 'click',
+};
+
+hotKeyDataArr.push({
+    name: "EnglishVersion",
+    text: 'Eng Version',
+    hotKey: 'f4',
+    mode: 'global',
+    isActive() {
+        return $("#ptLabelUserid label").length > 0 && $("#ptLabelUserid label").text() != 'User ID';
+    },
+    onTrigger() {
+        location.href = 'http://116.31.95.2:81/psp/csprd/EMPLOYEE/HRMS/?&cmd=login&languageCd=ENG';
+    },
+});
+// hotKeyDataArr.push({
+//     name: 'OptimizedMode',
+//     text: 'Go into Optimized Mode',
+//     hotKey: 'f4',
+//     mode: 'global',
+//     isActive() {
+//         return $("iframe#ptifrmtgtframe").length > 0
+//             || location.href.indexOf('STUDENT_HOMEPAGE') != -1;
+//     },
+//     onTrigger() {
+//         var go = '';
+//         if($("iframe#ptifrmtgtframe").length > 0) {
+//             go = $("iframe#ptifrmtgtframe")[0].contentDocument.location.href;
+//         } else {
+//             go = 'http://116.31.95.2:81/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_CART.GBL?FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT.HC_SSR_SSENRL_CART_GBL&IsFolder=false&IgnoreParamTempl=FolderPath%2cIsFolder';
+//         }
+//         location.href = go;
+//     }
+// });
+hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
+    name: 'Login',
+    bindSelector: '.ps_signinentry input[type=submit]'
+}));
+hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
+    name: 'StartSearch',
+    bindSelector: '#DERIVED_REGFRM1_SSR_PB_SRCH',
+    onTrigger() {
+        $('#DERIVED_REGFRM1_SSR_PB_SRCH').advancedClick();
+        // var iId = setInterval(() => {
+        //     if($('.PSGROUPBOXLABEL').text() == "Search for Classes") {
+        //         clearInterval(iId);
+        //         reboot();
+        //     }
+        // }, 500);
+    }
+}));
+// hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
+//     name: 'SearchStep2',
+//     bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH'
+// }));
+hotKeyDataArr.push({
+    name: 'SearchStep2',
+    mode: 'raw',
+    isActive() {
+        return $('#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH').length > 0;
+    },
+    render() {
+        $.get(getURL('search_subject.template.html'), function(template) {
+            var data = {
+                subjectArr: 
+                    $.map($("#SSR_CLSRCH_WRK_SUBJECT\\$0 option"), op => op.value)
+                        .filter(x => x)
+            };
+            var $html = $(tmpl(template, data));
+            $("body #win0divDERIVED_CLSRCH_GROUP2").parent().prepend($html);
+            $html.on('click', '.subject', function() {
+                var $this = $(this);
+                var subject = $this.data('subject');
+                $("#SSR_CLSRCH_WRK_SUBJECT\\$0")[0].value = subject;
+                setTimeout(() => {
+                    $("#CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH").advancedClick();
+                }, 0);
+            });
+        });
+    }
+});
+//TODO: this is auto executed...
+hotKeyDataArr.push((function() {
+    var getElArr = () => 
+        $("a[id*=viewall]")
+            .filter((idx,el) => $(el).text() == "View All Sections");
+    return {
+        name: "ViewAllSection",
+        mode: 'raw',
+        isActive() {
+            return getElArr().length > 0;
+        },
+        render() {
+            if(getElArr().length>0) {
+                // hint
+                var $html = $(tmpl(floatHtmlTemplate, {
+                    text: 'Viewing All Sections...'
+                }));
+                $html.addClass('center-up');
+                $("body").append($html);
+                // click
+                $(getElArr()[0]).advancedClick();
+            }
+        },
+    };
+})());
