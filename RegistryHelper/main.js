@@ -336,6 +336,11 @@ function startSequence(seqName) {
     autoContinueSequence();
 }
 
+function stopSequence() {
+    localStorage.removeItem(KEY_SEQ_NAME);
+    reboot();
+}
+
 function autoContinueSequence() {
     var seqName = localStorage[KEY_SEQ_NAME];
     var seqStage = parseInt(localStorage[KEY_SEQ_STAGE]);
@@ -354,7 +359,7 @@ function autoContinueSequence() {
 
     nextStage = seqStage + 1;
     if(nextStage >= taskSeq.length) {
-        localStorage.removeItem(KEY_SEQ_NAME);
+        stopSequence();
     } else {
         localStorage[KEY_SEQ_STAGE] = '' + nextStage;
     }
@@ -421,6 +426,7 @@ hotKeyDataArr.push({
     text: 'Eng Version',
     hotKey: 'f4',
     mode: 'global',
+    autoSetting: 'AutoEngVersion',
     isActive() {
         return $("#ptLabelUserid label").length > 0 && $("#ptLabelUserid label").text() != 'User ID';
     },
@@ -495,27 +501,43 @@ hotKeyDataArr.push({
         });
     }
 });
-//TODO: this is auto executed...
-hotKeyDataArr.push((function() {
-    var getElArr = () => 
+var getViewAllElArr = () =>
         $("a[id*=viewall]")
             .filter((idx,el) => $(el).text() == "View All Sections");
+hotKeyDataArr.push((function() {
     return {
         name: "ViewAllSection",
-        mode: 'raw',
+        text: 'View All',
+        mode: 'global',
+        autoSetting: 'AutoExpandCourse',
         isActive() {
-            return getElArr().length > 0;
+            return getViewAllElArr().length > 0;
         },
-        render() {
-            if(getElArr().length>0) {
-                // hint
-                showCenteredHint('Viewing all sections...');
-                // click
-                $(getElArr()[0]).advancedClick();
-            }
+        onTrigger() {
+            startSequence('ViewAllSection');
         },
     };
 })());
+taskSeqDataMap['ViewAllSection'] = (() => {
+    // trick: although we do not know how many times it will need, we can still do the while-true-and-break trick
+    var func = () => {
+        if(getViewAllElArr().length>0) {
+            $(getViewAllElArr()[0]).advancedClick();
+        } else {
+            stopSequence();
+        }
+    }
+    var result = [];
+    var N = 10;
+    for(var i = 0;i<N;++i) {
+        result.push({
+            frame: 'iframe',
+            execute: func,
+        });
+    }
+    return result;
+})();
+
 hotKeyDataArr.push(Object.assign({}, HIGHLIGHT_TEMPLATE, {
     name: 'GoBackToSearchResults',
     bindSelector: '#CLASS_SRCH_WRK2_SSR_PB_BACK'
