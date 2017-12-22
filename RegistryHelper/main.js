@@ -326,8 +326,8 @@ $(boot);
 var KEY_SEQ_NAME = 'SeqName';
 var KEY_SEQ_STAGE = 'SeqStage';
 
-function startSequence(seqName) {
-    if(localStorage[KEY_SEQ_NAME]) {
+function startSequence(seqName, forceStart) {
+    if(!forceStart && localStorage[KEY_SEQ_NAME]) {
         return;
     }
     localStorage[KEY_SEQ_NAME] = seqName;
@@ -493,7 +493,7 @@ hotKeyDataArr.push({
                     })
                     .filter(item => item.abbr),
             };
-            console.log(data);
+            // console.log(data);
             var $html = $(tmpl(template, data));
             $("body #win0divDERIVED_CLSRCH_GROUP2").parent().prepend($html);
             $html.on('click', '.subject', function() {
@@ -562,8 +562,8 @@ hotKeyDataArr.push({
     },
     onTrigger(mode) {
         if(mode!='auto' || location.href.indexOf('STUDENT_HOMEPAGE')!=-1) {
-            console.log(mode, location.href);
-            startSequence('GoToSearchCourse');
+            // console.log(mode, location.href);
+            startSequence('GoToSearchCourse', true);
         }
     },
 });
