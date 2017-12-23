@@ -1,109 +1,3 @@
-// utils.getURL
-window.getURL = function(src) {
-    if(typeof(chrome)!=='undefined') {
-        return chrome.extension.getURL('/'+src);
-    } else if(typeof(safari)!=='undefined') {
-        return safari.extension.baseURI + src;
-    } else {
-        throw new Exception('No available env');
-    }
-}
-window.inIframe = function() {
-    try {
-        return window.self !== window.top;
-    } catch (e) {
-        return true;
-    }
-}
-$.fn.extend({
-    advancedClick() {
-        var $el = $(this);
-        if($el.attr('href')) {
-            location.href = $el.attr('href');
-        } else {
-            $el.click();
-        }
-    }
-});
-// https://stackoverflow.com/questions/5202296/add-a-hook-to-all-ajax-requests-on-a-page
-window.addXMLRequestCallback = function(callback){
-    var oldSend, i;
-    if( XMLHttpRequest.callbacks ) {
-        // we've already overridden send() so just add the callback
-        XMLHttpRequest.callbacks.push( callback );
-    } else {
-        // create a callback queue
-        XMLHttpRequest.callbacks = [callback];
-        // store the native send()
-        oldSend = XMLHttpRequest.prototype.send;
-        // override the native send()
-        XMLHttpRequest.prototype.send = function(){
-            // process the callback queue
-            // the xhr instance is passed into each callback but seems pretty useless
-            // you can't tell what its destination is or call abort() without an error
-            // so only really good for logging that a request has happened
-            // I could be wrong, I hope so...
-            // EDIT: I suppose you could override the onreadystatechange handler though
-            for( i = 0; i < XMLHttpRequest.callbacks.length; i++ ) {
-                XMLHttpRequest.callbacks[i]( this );
-            }
-            // call the native send()
-            oldSend.apply(this, arguments);
-        }
-    }
-}
-// https://stackoverflow.com/questions/3219758/detect-changes-in-the-dom
-var observeDOM = (function(){
-    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver,
-        eventListenerSupported = window.addEventListener;
-
-    return function(obj, callback){
-        // define a new observer
-        var obs = new MutationObserver(function(mutations, observer){
-            if( mutations[0].addedNodes.length || mutations[0].removedNodes.length )
-                callback(mutations);
-        });
-        // have the observer observe foo for changes in children
-        obs.observe( obj, { childList:true, subtree:true });
-    };
-})();
-function throttle(func, wait, options) {
-    var context, args, result;
-    var timeout = null;
-    var previous = 0;
-    if (!options) options = {};
-    var later = function () {
-        previous = options.leading === false ? 0 : Date.now();
-        timeout = null;
-        result = func.apply(context, args);
-        if (!timeout) context = args = null;
-    };
-    return function () {
-        var now = Date.now();
-        if (!previous && options.leading === false) previous = now;
-        var remaining = wait - (now - previous);
-        context = this;
-        args = arguments;
-        if (remaining <= 0 || remaining > wait) {
-            if (timeout) {
-                clearTimeout(timeout);
-                timeout = null;
-            }
-            previous = now;
-            result = func.apply(context, args);
-            if (!timeout) context = args = null;
-        } else if (!timeout && options.trailing !== false) {
-            timeout = setTimeout(later, remaining);
-        }
-        return result;
-    };
-};
-console.realLog = console.log;
-console.log = function() {
-    var prefix = (isMainFrameMode()?'M':'A');
-    console.realLog('['+prefix+']', ...arguments);
-}
-
 var IFRAME_SELECTOR = "iframe#ptifrmtgtframe";
 var floatHtmlTemplate = '';
 
@@ -269,7 +163,7 @@ function changeFocus() {
 }
 
 function injectPersistentDOM() {
-    $.get(getURL('inject.template.html'), function(data) {
+    $.get(getURL('registry/inject.template.html'), function(data) {
         $("body").append(data);
         $(".refresh-page").click(() => {
             location.reload();
@@ -281,7 +175,7 @@ function injectPersistentDOM() {
 }
 
 function boot() {
-    $.get(getURL('float.template.html'), function(data) {
+    $.get(getURL('registry/float.template.html'), function(data) {
         console.log("Boot");
         floatHtmlTemplate = data;
         createAllHotKey();
@@ -319,7 +213,7 @@ function reboot() {
     }
 }
 
-$(boot);
+bootByUrl('116.31.95.2:81', boot);
 
 // sequence
 
@@ -482,7 +376,7 @@ hotKeyDataArr.push({
         return $(SELECTOR_SEARCH_COURSE_PAGE).length > 0;
     },
     render() {
-        $.get(getURL('search_subject.template.html'), function(template) {
+        $.get(getURL('registry/search_subject.template.html'), function(template) {
             var data = {
                 subjectArr: 
                     $.map($("#SSR_CLSRCH_WRK_SUBJECT\\$0 option"), (op) => {

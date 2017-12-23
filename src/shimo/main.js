@@ -64,18 +64,22 @@ function executeUntilSucceed(f, timeout) {
     }
 }
 
-console.log("ShiMo Helper :)");
+function bootShimo() {
+    console.log("ShiMo Helper :)");
 
-executeUntilSucceed(() => {
-    $(".fixed-box").hide();
-    return $(".fixed-box").length > 0;
-});
+    executeUntilSucceed(() => {
+        $(".fixed-box").hide();
+        return $(".fixed-box").length > 0;
+    });
 
-executeUntilSucceed(() => {
-    if($("#pad-view").length > 0) {
-        $("body").keydown(onKeyDown);
-        return true;
-    } else {
-        return false;
-    }
-});
+    executeUntilSucceed(() => {
+        if($("#pad-view").length > 0) {
+            $("body").keydown(onKeyDown);
+            return true;
+        } else {
+            return false;
+        }
+    });
+}
+
+bootByUrl('shimo.im', bootShimo);

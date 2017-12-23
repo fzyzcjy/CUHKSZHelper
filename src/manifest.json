@@ -1,0 +1,43 @@
+﻿{
+	"manifest_version": 2,
+	"name": "CUHKSZ Helper",
+	"author": "CJY@CUHKSZ",
+	"version": "0.2.0",
+	"content_scripts": [
+		{
+			"matches": [
+				"https://elearning.cuhk.edu.cn/*",
+				"https://shimo.im/**",
+				"http://116.31.95.2:81/**"
+			],
+			"css": [
+				"moodle/style.css",
+				"shimo/style.css",
+				"registry/style.css"
+			],
+			"js": [
+				"libs/jquery.min.js",
+				"libs/mousetrap.js",
+				"libs/tmpl.js",
+				"libs/quicksettings.js",
+				"utils/helper.js",
+				"moodle/main.js",
+				"shimo/main.js",
+				"registry/main.js"
+			],
+			"all_frames": true,
+			"run_at": "document_start"
+		}
+	],
+	"web_accessible_resources": [
+		"moodle/index.template.html",
+		"moodle/quiz.template.html",
+		"moodle/ebp_hint.template.html",
+		"registry/float.template.html",
+		"registry/inject.template.html",
+		"registry/search_subject.template.html"
+	],
+	"permissions": [
+		"activeTab"
+	]
+}
