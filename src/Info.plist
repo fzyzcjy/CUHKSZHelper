@@ -20,21 +20,24 @@
 		<dict>
 			<key>End</key>
 			<array>
-				<string>jquery.min.js</string>
-				<string>helper.js</string>
-				<string>spider.js</string>
-				<string>displayer.js</string>
-				<string>quiz.js</string>
-				<string>others.js</string>
+				<string>libs/jquery.min.js</string>
+				<string>libs/mousetrap.js</string>
+				<string>libs/tmpl.js</string>
+				<string>libs/quicksettings.js</string>
+				<string>utils/helper.js</string>
+				<string>moodle/main.js</string>
+				<string>registry/main.js</string>
 			</array>
 		</dict>
 		<key>Stylesheets</key>
 		<array>
-			<string>style.css</string>
+			<string>moodle/style.css</string>
+			<string>registry/style.css</string>
 		</array>
 		<key>Whitelist</key>
 		<array>
 			<string>https://elearning.cuhk.edu.cn/*</string>
+			<string>https://116.31.95.2:81/*</string>
 		</array>
 	</dict>
 	<key>DeveloperIdentifier</key>
@@ -48,6 +51,7 @@
 			<key>Allowed Domains</key>
 			<array>
 				<string>elearning.cuhk.edu.cn</string>
+				<string>116.31.95.2</string>
 			</array>
 			<key>Include Secure Pages</key>
 			<true/>
