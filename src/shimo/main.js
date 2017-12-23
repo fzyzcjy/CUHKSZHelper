@@ -1,3 +1,16 @@
+var bootShimo = (function(){
+
+var HELP_MAP = [
+    '字体快捷键',
+    ['shift+F1', '加粗黑色 Bold Black'],
+    ['shift+F2', '黑色 Black'],
+    ['shift+F3', '灰色 Gray'],
+    ['F2', '蓝色 Blue'],
+    '其他快捷键',
+    ['shift+F11', '隐藏/显示顶部条 Hide/Show Top Bars'],
+    ['shift+F12', '进入/退出小屏幕优化模式 Enter/Quit Small Screen Optimize Mode'],
+]
+var HELP_STR = HELP_MAP.map(item => typeof(item)=='string' ? ('\n' + item + '\n') : (item[0] + ': ' + item[1] + '\n')).join('');
 
 function setColor(idx) {
     var $colorList = $("#color-list");
@@ -37,9 +50,12 @@ function onKeyDown(e) {
         }
     } else if(!e.ctrlKey && e.shiftKey) {
         switch(e.key) {
-        case 'F11': toggleDisplay('#edit-heading'); break;
-        case 'F12':
+        case 'F11':
+            toggleDisplay('#edit-heading');
             toggleDisplay('#header-wrap');
+            $('body').toggleClass('css-modify-fullscreen');
+            break;
+        case 'F12':
             $('body').toggleClass('css-modify');
             break;
         default: succeed = false; break;
@@ -48,7 +64,7 @@ function onKeyDown(e) {
         switch(e.key) {
         case 'F2': 
             setBold(false);
-            setColor(42);
+            setColor(8);
             break;
         default: succeed = false; break;
         }
@@ -56,12 +72,6 @@ function onKeyDown(e) {
         succeed = false;
     }
     if(succeed) console.log("Action", e.key);
-}
-
-function executeUntilSucceed(f, timeout) {
-    if(!f()) {
-        setTimeout(() => {executeUntilSucceed(f);}, timeout || 500);
-    }
 }
 
 function bootShimo() {
@@ -75,11 +85,19 @@ function bootShimo() {
     executeUntilSucceed(() => {
         if($("#pad-view").length > 0) {
             $("body").keydown(onKeyDown);
+            $("body").append('<div class="show-help">Help</div>');
+            $(".show-help").click(() => {
+                alert(HELP_STR);
+            });
             return true;
         } else {
             return false;
         }
     });
 }
+
+return bootShimo;
+
+})();
 
 bootByUrl('shimo.im', bootShimo);

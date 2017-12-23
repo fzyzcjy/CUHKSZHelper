@@ -1,3 +1,5 @@
+var bootRegistry = (function() {
+
 var IFRAME_SELECTOR = "iframe#ptifrmtgtframe";
 var floatHtmlTemplate = '';
 
@@ -212,8 +214,6 @@ function reboot() {
         registerHotKeyPassToIframe();
     }
 }
-
-bootByUrl('116.31.95.2:81', boot);
 
 // sequence
 
@@ -494,3 +494,9 @@ settingDataArr.push({
     type: 'checkbox',
     defValue: true,
 });
+
+return boot;
+
+})();
+
+bootByUrl('116.31.95.2', bootRegistry);

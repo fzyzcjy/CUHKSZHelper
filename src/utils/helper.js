@@ -193,8 +193,14 @@ window.throttle = function(func, wait, options) {
     };
 };
 
-console.realLog = console.log;
-console.log = function() {
-    var prefix = (isMainFrameMode()?'M':'A');
-    console.realLog('['+prefix+']', ...arguments);
+// console.realLog = console.log;
+// console.log = function() {
+//     var prefix = (isMainFrameMode()?'M':'A');
+//     console.realLog('['+prefix+']', ...arguments);
+// }
+
+window.executeUntilSucceed = function(f, timeout) {
+    if(!f()) {
+        setTimeout(() => {executeUntilSucceed(f);}, timeout || 500);
+    }
 }
