@@ -1,16 +1,3 @@
-var bootShimo = (function(){
-
-var HELP_MAP = [
-    '字体快捷键',
-    ['shift+F1', '加粗黑色 Bold Black'],
-    ['shift+F2', '黑色 Black'],
-    ['shift+F3', '灰色 Gray'],
-    ['F2', '蓝色 Blue'],
-    '其他快捷键',
-    ['shift+F11', '隐藏/显示顶部条 Hide/Show Top Bars'],
-    ['shift+F12', '进入/退出小屏幕优化模式 Enter/Quit Small Screen Optimize Mode'],
-]
-var HELP_STR = HELP_MAP.map(item => typeof(item)=='string' ? ('\n' + item + '\n') : (item[0] + ': ' + item[1] + '\n')).join('');
 
 function setColor(idx) {
     var $colorList = $("#color-list");
@@ -50,12 +37,9 @@ function onKeyDown(e) {
         }
     } else if(!e.ctrlKey && e.shiftKey) {
         switch(e.key) {
-        case 'F11':
-            toggleDisplay('#edit-heading');
-            toggleDisplay('#header-wrap');
-            $('body').toggleClass('css-modify-fullscreen');
-            break;
+        case 'F11': toggleDisplay('#edit-heading'); break;
         case 'F12':
+            toggleDisplay('#header-wrap');
             $('body').toggleClass('css-modify');
             break;
         default: succeed = false; break;
@@ -64,7 +48,7 @@ function onKeyDown(e) {
         switch(e.key) {
         case 'F2': 
             setBold(false);
-            setColor(8);
+            setColor(42);
             break;
         default: succeed = false; break;
         }
@@ -74,30 +58,24 @@ function onKeyDown(e) {
     if(succeed) console.log("Action", e.key);
 }
 
-function bootShimo() {
-    console.log("ShiMo Helper :)");
-
-    executeUntilSucceed(() => {
-        $(".fixed-box").hide();
-        return $(".fixed-box").length > 0;
-    });
-
-    executeUntilSucceed(() => {
-        if($("#pad-view").length > 0) {
-            $("body").keydown(onKeyDown);
-            $("body").append('<div class="show-help">Help</div>');
-            $(".show-help").click(() => {
-                alert(HELP_STR);
-            });
-            return true;
-        } else {
-            return false;
-        }
-    });
+function executeUntilSucceed(f, timeout) {
+    if(!f()) {
+        setTimeout(() => {executeUntilSucceed(f);}, timeout || 500);
+    }
 }
 
-return bootShimo;
+console.log("ShiMo Helper :)");
 
-})();
+executeUntilSucceed(() => {
+    $(".fixed-box").hide();
+    return $(".fixed-box").length > 0;
+});
 
-bootByUrl('shimo.im', bootShimo);
+executeUntilSucceed(() => {
+    if($("#pad-view").length > 0) {
+        $("body").keydown(onKeyDown);
+        return true;
+    } else {
+        return false;
+    }
+});

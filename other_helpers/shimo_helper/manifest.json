@@ -1,0 +1,21 @@
+﻿{
+	"manifest_version": 2,
+	"name": "ShiMo Helper",
+	"author": "CJY@CUHKSZ",
+	"version": "0.1.0",
+	"content_scripts": [
+		{
+			"matches": ["https://shimo.im/**"],
+			"css": ["style.css"],
+			"js": [
+				"jquery.min.js",
+				"main.js"
+			],
+			"all_frames": true,
+			"run_at": "document_start"
+		}
+	],
+	"permissions": [
+		"activeTab"
+	]
+}

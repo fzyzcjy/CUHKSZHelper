@@ -7,12 +7,10 @@
 		{
 			"matches": [
 				"https://elearning.cuhk.edu.cn/*",
-				"https://shimo.im/**",
 				"http://116.31.95.2:81/**"
 			],
 			"css": [
 				"moodle/style.css",
-				"shimo/style.css",
 				"registry/style.css"
 			],
 			"js": [
@@ -22,7 +20,6 @@
 				"libs/quicksettings.js",
 				"utils/helper.js",
 				"moodle/main.js",
-				"shimo/main.js",
 				"registry/main.js"
 			],
 			"all_frames": true,
