@@ -385,9 +385,13 @@ hotKeyDataArr.push({
                             hint: $(op).text(),
                         };
                     })
-                    .filter(item => item.abbr),
+                    .filter(item => item.abbr)
+                    .sort((x,y) => {
+                        if(x.abbr < y.abbr) return -1;
+                        if(x.abbr ==y.abbr) return 0;
+                        if(x.abbr > y.abbr) return 1;
+                    })
             };
-            // console.log(data);
             var $html = $(tmpl(template, data));
             $("body #win0divDERIVED_CLSRCH_GROUP2").parent().prepend($html);
             $html.on('click', '.subject', function() {
