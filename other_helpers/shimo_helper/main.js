@@ -37,9 +37,12 @@ function onKeyDown(e) {
         }
     } else if(!e.ctrlKey && e.shiftKey) {
         switch(e.key) {
-        case 'F11': toggleDisplay('#edit-heading'); break;
-        case 'F12':
+        case 'F11':
+            toggleDisplay('#edit-heading');
             toggleDisplay('#header-wrap');
+            $('body').toggleClass('css-modify-fullscreen');
+            break;
+        case 'F12':
             $('body').toggleClass('css-modify');
             break;
         default: succeed = false; break;
@@ -48,7 +51,7 @@ function onKeyDown(e) {
         switch(e.key) {
         case 'F2': 
             setBold(false);
-            setColor(42);
+            setColor(8);
             break;
         default: succeed = false; break;
         }

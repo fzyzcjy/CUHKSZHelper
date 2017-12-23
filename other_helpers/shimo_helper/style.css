@@ -7,6 +7,6 @@ body.css-modify {
 }
 
 /* should be full height when no headers */
-.css-modify #pad-view-inner, .css-modify #doc-view {
+.css-modify-fullscreen #pad-view-inner, .css-modify-fullscreen #doc-view {
     height: 100% !important;
 }
